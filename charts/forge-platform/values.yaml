@@ -3,7 +3,7 @@ forgePlatform:
   replicaCount: 1
 
   image:
-    repository: docker-registry.registry.svc.cluster.local:5000/forge_platform
+    repository: registry.lucas.engineering/forge_platform
     tag: latest
     pullPolicy: Always
 
