@@ -1,0 +1,39 @@
+forgePlatform:
+  name: forge-platform
+  replicaCount: 1
+
+  image:
+    repository: registry.lucas.engineering/forge_platform
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8000
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: forge.lucas.engineering
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+
+  env:
+    DATABASE_URL: "postgresql://postgres:forge-secret-password@forge-postgresql.forge-platform.svc.cluster.local:5432/forge_platform"
+    OTEL_SERVICE_NAME: "forge-platform"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring.svc.cluster.local:4317"
+    OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+    OTEL_LOGS_EXPORTER: "otlp"
+    OTEL_METRICS_EXPORTER: "otlp"
+    OTEL_TRACES_EXPORTER: "otlp"
+    OTEL_PYTHON_LOG_CORRELATION: "true"
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=production,service.namespace=forge-platform"
+
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "512Mi"

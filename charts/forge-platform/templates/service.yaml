@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.forgePlatform.name }}
+  labels:
+    {{- include "forge-platform.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.forgePlatform.service.type }}
+  selector:
+    {{- include "forge-platform.selectorLabels" . | nindent 4 }}
+  ports:
+  - port: {{ .Values.forgePlatform.service.port }}
+    targetPort: {{ .Values.forgePlatform.service.targetPort }}
+    protocol: TCP

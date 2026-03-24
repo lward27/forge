@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.forgePostgresql.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.forgePostgresql.name }}
+spec:
+  type: {{ .Values.forgePostgresql.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ .Values.forgePostgresql.name }}
+  ports:
+  - port: {{ .Values.forgePostgresql.service.port }}
+    targetPort: 5432
+    protocol: TCP

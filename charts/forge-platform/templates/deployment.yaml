@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.forgePlatform.name }}
+  labels:
+    {{- include "forge-platform.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.forgePlatform.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "forge-platform.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "forge-platform.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ .Values.forgePlatform.name }}
+        image: "{{ .Values.forgePlatform.image.repository }}:{{ .Values.forgePlatform.image.tag }}"
+        imagePullPolicy: {{ .Values.forgePlatform.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.forgePlatform.service.targetPort }}
+        env:
+        {{- range $key, $value := .Values.forgePlatform.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.forgePlatform.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.forgePlatform.service.targetPort }}
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: {{ .Values.forgePlatform.service.targetPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
