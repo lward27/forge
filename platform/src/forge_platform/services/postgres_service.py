@@ -235,3 +235,234 @@ def drop_columns(
         cur.close()
     finally:
         conn.close()
+
+
+# ── Tenant DB DML operations ──────────────────────────────────────────────
+
+
+def insert_row(
+    pg_database: str,
+    table_name: str,
+    data: dict,
+    returning_columns: list[str],
+) -> dict:
+    """Insert a row and return it with all columns."""
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        columns = list(data.keys())
+        values = list(data.values())
+
+        stmt = sql.SQL("INSERT INTO {} ({}) VALUES ({}) RETURNING {}").format(
+            sql.Identifier(table_name),
+            sql.SQL(", ").join(sql.Identifier(c) for c in columns),
+            sql.SQL(", ").join(sql.Placeholder() for _ in values),
+            sql.SQL(", ").join(sql.Identifier(c) for c in returning_columns),
+        )
+        cur.execute(stmt, values)
+        row = cur.fetchone()
+        result = dict(zip(returning_columns, row))
+        cur.close()
+        return result
+    finally:
+        conn.close()
+
+
+def insert_rows_batch(
+    pg_database: str,
+    table_name: str,
+    rows_data: list[dict],
+    returning_columns: list[str],
+) -> list[dict]:
+    """Insert multiple rows in a single transaction."""
+    conn = _get_admin_connection(dbname=pg_database)
+    # Use a transaction (not autocommit) for batch
+    conn.set_isolation_level(0)  # reset to default (transactional)
+    try:
+        cur = conn.cursor()
+        results = []
+        for data in rows_data:
+            columns = list(data.keys())
+            values = list(data.values())
+
+            stmt = sql.SQL("INSERT INTO {} ({}) VALUES ({}) RETURNING {}").format(
+                sql.Identifier(table_name),
+                sql.SQL(", ").join(sql.Identifier(c) for c in columns),
+                sql.SQL(", ").join(sql.Placeholder() for _ in values),
+                sql.SQL(", ").join(sql.Identifier(c) for c in returning_columns),
+            )
+            cur.execute(stmt, values)
+            row = cur.fetchone()
+            results.append(dict(zip(returning_columns, row)))
+
+        conn.commit()
+        cur.close()
+        return results
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def select_rows(
+    pg_database: str,
+    table_name: str,
+    columns: list[str],
+    filters: list[tuple] | None = None,
+    sort_column: str | None = None,
+    sort_desc: bool = False,
+    limit: int = 20,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
+    """Select rows with filtering, sorting, and pagination. Returns (rows, total)."""
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+
+        # Build WHERE clause
+        where_parts = []
+        where_values = []
+        if filters:
+            for col_name, pg_op, value in filters:
+                if pg_op == "IS NULL":
+                    if value.lower() == "true":
+                        where_parts.append(
+                            sql.SQL("{} IS NULL").format(sql.Identifier(col_name))
+                        )
+                    else:
+                        where_parts.append(
+                            sql.SQL("{} IS NOT NULL").format(sql.Identifier(col_name))
+                        )
+                elif pg_op == "IN":
+                    in_values = [v.strip() for v in value.split(",")]
+                    placeholders = sql.SQL(", ").join(sql.Placeholder() for _ in in_values)
+                    where_parts.append(
+                        sql.SQL("{} IN ({})").format(sql.Identifier(col_name), placeholders)
+                    )
+                    where_values.extend(in_values)
+                else:
+                    where_parts.append(
+                        sql.SQL("{} " + pg_op + " {}").format(
+                            sql.Identifier(col_name), sql.Placeholder()
+                        )
+                    )
+                    where_values.append(value)
+
+        where_clause = sql.SQL("")
+        if where_parts:
+            where_clause = sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_parts)
+
+        # Count total
+        count_stmt = sql.SQL("SELECT COUNT(*) FROM {}").format(
+            sql.Identifier(table_name)
+        ) + where_clause
+        cur.execute(count_stmt, where_values)
+        total = cur.fetchone()[0]
+
+        # Build SELECT
+        select_stmt = sql.SQL("SELECT {} FROM {}").format(
+            sql.SQL(", ").join(sql.Identifier(c) for c in columns),
+            sql.Identifier(table_name),
+        ) + where_clause
+
+        if sort_column:
+            direction = sql.SQL(" DESC") if sort_desc else sql.SQL(" ASC")
+            select_stmt = select_stmt + sql.SQL(" ORDER BY ") + sql.Identifier(sort_column) + direction
+
+        select_stmt = select_stmt + sql.SQL(" LIMIT {} OFFSET {}").format(
+            sql.Literal(limit), sql.Literal(offset)
+        )
+
+        cur.execute(select_stmt, where_values)
+        rows = [dict(zip(columns, row)) for row in cur.fetchall()]
+        cur.close()
+        return rows, total
+    finally:
+        conn.close()
+
+
+def select_row_by_pk(
+    pg_database: str,
+    table_name: str,
+    columns: list[str],
+    pk_value: int,
+) -> dict | None:
+    """Select a single row by primary key."""
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        stmt = sql.SQL("SELECT {} FROM {} WHERE {} = {}").format(
+            sql.SQL(", ").join(sql.Identifier(c) for c in columns),
+            sql.Identifier(table_name),
+            sql.Identifier("id"),
+            sql.Placeholder(),
+        )
+        cur.execute(stmt, [pk_value])
+        row = cur.fetchone()
+        cur.close()
+        if row is None:
+            return None
+        return dict(zip(columns, row))
+    finally:
+        conn.close()
+
+
+def update_row(
+    pg_database: str,
+    table_name: str,
+    pk_value: int,
+    data: dict,
+    returning_columns: list[str],
+) -> dict | None:
+    """Update a row by primary key and return the updated row."""
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        set_parts = []
+        values = []
+        for col, val in data.items():
+            set_parts.append(
+                sql.SQL("{} = {}").format(sql.Identifier(col), sql.Placeholder())
+            )
+            values.append(val)
+
+        values.append(pk_value)
+
+        stmt = sql.SQL("UPDATE {} SET {} WHERE {} = {} RETURNING {}").format(
+            sql.Identifier(table_name),
+            sql.SQL(", ").join(set_parts),
+            sql.Identifier("id"),
+            sql.Placeholder(),
+            sql.SQL(", ").join(sql.Identifier(c) for c in returning_columns),
+        )
+        cur.execute(stmt, values)
+        row = cur.fetchone()
+        cur.close()
+        if row is None:
+            return None
+        return dict(zip(returning_columns, row))
+    finally:
+        conn.close()
+
+
+def delete_row(
+    pg_database: str,
+    table_name: str,
+    pk_value: int,
+) -> bool:
+    """Delete a row by primary key. Returns True if deleted."""
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        stmt = sql.SQL("DELETE FROM {} WHERE {} = {}").format(
+            sql.Identifier(table_name),
+            sql.Identifier("id"),
+            sql.Placeholder(),
+        )
+        cur.execute(stmt, [pk_value])
+        deleted = cur.rowcount > 0
+        cur.close()
+        return deleted
+    finally:
+        conn.close()

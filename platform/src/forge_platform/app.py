@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 
 from forge_platform.database import get_engine
 from forge_platform.models import Tenant, TenantDatabase, TableDefinition, ColumnDefinition  # noqa: F401
-from forge_platform.routers import databases, health, tables, tenants
+from forge_platform.routers import databases, health, rows, tables, tenants
 
 
 @asynccontextmanager
@@ -19,3 +19,4 @@ app.include_router(health.router)
 app.include_router(tenants.router)
 app.include_router(databases.router)
 app.include_router(tables.router)
+app.include_router(rows.router)
