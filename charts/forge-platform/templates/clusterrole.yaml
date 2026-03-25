@@ -9,7 +9,7 @@ rules:
   resources: ["namespaces"]
   verbs: ["create", "get", "list", "delete"]
 - apiGroups: [""]
-  resources: ["resourcequotas", "limitranges"]
+  resources: ["resourcequotas", "limitranges", "secrets"]
   verbs: ["create", "get", "list", "delete"]
 - apiGroups: ["networking.k8s.io"]
   resources: ["networkpolicies"]

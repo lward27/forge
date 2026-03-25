@@ -133,3 +133,35 @@ def namespace_exists(namespace: str) -> bool:
         if e.status == 404:
             return False
         raise
+
+
+def create_secret(
+    namespace: str,
+    name: str,
+    data: dict[str, str],
+    labels: dict[str, str] | None = None,
+) -> None:
+    """Create a K8s Secret in the given namespace."""
+    core_v1, _ = _get_clients()
+    core_v1.create_namespaced_secret(
+        namespace=namespace,
+        body=client.V1Secret(
+            metadata=client.V1ObjectMeta(name=name, labels=labels),
+            type="Opaque",
+            string_data=data,
+        ),
+    )
+    logger.info("Created secret %s in %s", name, namespace)
+
+
+def delete_secret(namespace: str, name: str) -> None:
+    """Delete a K8s Secret from the given namespace."""
+    core_v1, _ = _get_clients()
+    try:
+        core_v1.delete_namespaced_secret(name=name, namespace=namespace)
+        logger.info("Deleted secret %s from %s", name, namespace)
+    except ApiException as e:
+        if e.status == 404:
+            logger.warning("Secret %s in %s already deleted", name, namespace)
+        else:
+            raise

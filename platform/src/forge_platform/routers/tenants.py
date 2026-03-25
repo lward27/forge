@@ -11,7 +11,7 @@ from forge_platform.schemas.tenant import (
     TenantListResponse,
     TenantResponse,
 )
-from forge_platform.services import tenant_service
+from forge_platform.services import database_service, tenant_service
 
 router = APIRouter(prefix="/tenants", tags=["tenants"])
 
@@ -75,7 +75,11 @@ def get_tenant(
         status=tenant.status,
         resource_limits=tenant.resource_limits,
         created_at=tenant.created_at,
-        resources={"databases": 0, "services": 0, "frontends": 0},
+        resources={
+            "databases": database_service.count_databases(session, tenant.id),
+            "services": 0,
+            "frontends": 0,
+        },
     )
 
 
