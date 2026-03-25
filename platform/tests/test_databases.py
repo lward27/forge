@@ -1,18 +1,10 @@
 from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session
 
 from forge_platform.app import app
-from forge_platform.database import get_session
 
-
-def get_mock_session():
-    session = MagicMock(spec=Session)
-    yield session
-
-
-app.dependency_overrides[get_session] = get_mock_session
+import tests.conftest  # noqa: F401
 
 client = TestClient(app)
 

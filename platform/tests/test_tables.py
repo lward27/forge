@@ -1,18 +1,10 @@
 from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session
 
 from forge_platform.app import app
-from forge_platform.database import get_session
 
-
-def get_mock_session():
-    session = MagicMock(spec=Session)
-    yield session
-
-
-app.dependency_overrides[get_session] = get_mock_session
+import tests.conftest  # noqa: F401
 
 client = TestClient(app)
 
@@ -79,15 +71,7 @@ def test_create_table(mock_create, mock_get_table, mock_get_db, mock_get_tenant)
     mock_get_db.return_value = _mock_db()
     mock_create.return_value = (_mock_table_def(), _mock_columns())
 
-    response = client.post(
-        BASE_URL,
-        json={
-            "name": "customers",
-            "columns": [
-                {"name": "name", "type": "text", "nullable": False},
-            ],
-        },
-    )
+    response = client.post(BASE_URL, json={"name": "customers", "columns": [{"name": "name", "type": "text", "nullable": False}]})
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "customers"
@@ -104,47 +88,29 @@ def test_create_table_duplicate(mock_get_table, mock_get_db, mock_get_tenant):
     mock_get_db.return_value = _mock_db()
     mock_get_table.return_value = (_mock_table_def(), _mock_columns())
 
-    response = client.post(
-        BASE_URL,
-        json={
-            "name": "customers",
-            "columns": [{"name": "name", "type": "text"}],
-        },
-    )
+    response = client.post(BASE_URL, json={"name": "customers", "columns": [{"name": "name", "type": "text"}]})
     assert response.status_code == 409
 
 
 @patch("forge_platform.routers.tables.tenant_service.get_tenant", return_value=None)
 def test_create_table_tenant_not_found(mock_get_tenant):
-    response = client.post(
-        BASE_URL,
-        json={"name": "customers", "columns": [{"name": "name", "type": "text"}]},
-    )
+    response = client.post(BASE_URL, json={"name": "customers", "columns": [{"name": "name", "type": "text"}]})
     assert response.status_code == 404
     assert "Tenant not found" in response.json()["detail"]
 
 
 def test_create_table_invalid_type():
-    response = client.post(
-        BASE_URL,
-        json={"name": "customers", "columns": [{"name": "name", "type": "varchar"}]},
-    )
+    response = client.post(BASE_URL, json={"name": "customers", "columns": [{"name": "name", "type": "varchar"}]})
     assert response.status_code == 422
 
 
 def test_create_table_reserved_name():
-    response = client.post(
-        BASE_URL,
-        json={"name": "select", "columns": [{"name": "name", "type": "text"}]},
-    )
+    response = client.post(BASE_URL, json={"name": "select", "columns": [{"name": "name", "type": "text"}]})
     assert response.status_code == 422
 
 
 def test_create_table_reserved_column_name():
-    response = client.post(
-        BASE_URL,
-        json={"name": "customers", "columns": [{"name": "table", "type": "text"}]},
-    )
+    response = client.post(BASE_URL, json={"name": "customers", "columns": [{"name": "table", "type": "text"}]})
     assert response.status_code == 422
 
 
@@ -154,7 +120,6 @@ def test_create_table_reserved_column_name():
 def test_list_tables_empty(mock_list, mock_get_db, mock_get_tenant):
     mock_get_tenant.return_value = _mock_tenant()
     mock_get_db.return_value = _mock_db()
-
     response = client.get(BASE_URL)
     assert response.status_code == 200
     assert response.json() == {"tables": []}
@@ -166,7 +131,6 @@ def test_list_tables_empty(mock_list, mock_get_db, mock_get_tenant):
 def test_get_table_not_found(mock_get_table, mock_get_db, mock_get_tenant):
     mock_get_tenant.return_value = _mock_tenant()
     mock_get_db.return_value = _mock_db()
-
     response = client.get(f"{BASE_URL}/customers")
     assert response.status_code == 404
 
@@ -177,7 +141,6 @@ def test_get_table_not_found(mock_get_table, mock_get_db, mock_get_tenant):
 def test_alter_table_add_column(mock_alter, mock_get_db, mock_get_tenant):
     mock_get_tenant.return_value = _mock_tenant()
     mock_get_db.return_value = _mock_db()
-
     cols = _mock_columns()
     phone_col = MagicMock()
     phone_col.name = "phone"
@@ -187,13 +150,9 @@ def test_alter_table_add_column(mock_alter, mock_get_db, mock_get_tenant):
     phone_col.unique = False
     phone_col.default_value = None
     cols.append(phone_col)
-
     mock_alter.return_value = (_mock_table_def(), cols)
 
-    response = client.put(
-        f"{BASE_URL}/customers",
-        json={"add_columns": [{"name": "phone", "type": "text"}]},
-    )
+    response = client.put(f"{BASE_URL}/customers", json={"add_columns": [{"name": "phone", "type": "text"}]})
     assert response.status_code == 200
     assert len(response.json()["columns"]) == 3
 
@@ -205,11 +164,7 @@ def test_alter_table_drop_pk_column(mock_alter, mock_get_db, mock_get_tenant):
     mock_get_tenant.return_value = _mock_tenant()
     mock_get_db.return_value = _mock_db()
     mock_alter.side_effect = ValueError("Cannot drop primary key column 'id'")
-
-    response = client.put(
-        f"{BASE_URL}/customers",
-        json={"drop_columns": ["id"]},
-    )
+    response = client.put(f"{BASE_URL}/customers", json={"drop_columns": ["id"]})
     assert response.status_code == 400
     assert "primary key" in response.json()["detail"]
 
@@ -223,7 +178,6 @@ def test_delete_table(mock_delete, mock_get_db, mock_get_tenant):
     td = _mock_table_def()
     td.status = "deleted"
     mock_delete.return_value = td
-
     response = client.delete(f"{BASE_URL}/customers")
     assert response.status_code == 200
     assert response.json()["status"] == "deleted"
@@ -235,6 +189,5 @@ def test_delete_table(mock_delete, mock_get_db, mock_get_tenant):
 def test_delete_table_not_found(mock_delete, mock_get_db, mock_get_tenant):
     mock_get_tenant.return_value = _mock_tenant()
     mock_get_db.return_value = _mock_db()
-
     response = client.delete(f"{BASE_URL}/nonexistent")
     assert response.status_code == 404
