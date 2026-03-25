@@ -42,6 +42,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Forge Platform", lifespan=lifespan)
 
+# CORS — allow admin panel and tenant portal origins
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://admin.forge.lucas.engineering",
+        "https://app.forge.lucas.engineering",
+        "http://localhost:5173",
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Public routes (no auth)
 app.include_router(health.router)
 
