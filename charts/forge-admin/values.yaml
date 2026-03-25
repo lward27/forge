@@ -1,0 +1,19 @@
+forgeAdmin:
+  name: forge-admin
+  replicaCount: 1
+
+  image:
+    repository: registry.lucas.engineering/forge_admin
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: admin.forge.lucas.engineering
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod

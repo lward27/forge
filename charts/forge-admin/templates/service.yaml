@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.forgeAdmin.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.forgeAdmin.name }}
+spec:
+  type: {{ .Values.forgeAdmin.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ .Values.forgeAdmin.name }}
+  ports:
+  - port: {{ .Values.forgeAdmin.service.port }}
+    targetPort: 80
+    protocol: TCP

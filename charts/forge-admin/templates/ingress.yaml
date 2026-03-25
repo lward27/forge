@@ -1,0 +1,25 @@
+{{- if .Values.forgeAdmin.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.forgeAdmin.name }}
+  annotations:
+    {{- toYaml .Values.forgeAdmin.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.forgeAdmin.ingress.className }}
+  rules:
+  - host: {{ .Values.forgeAdmin.ingress.host }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.forgeAdmin.name }}
+            port:
+              number: {{ .Values.forgeAdmin.service.port }}
+  tls:
+  - hosts:
+    - {{ .Values.forgeAdmin.ingress.host }}
+    secretName: {{ .Values.forgeAdmin.ingress.host | replace "." "-" }}-tls
+{{- end }}
