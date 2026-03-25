@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.forgePlatform.name }}
+  labels:
+    {{- include "forge-platform.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["create", "get", "list", "delete"]
+- apiGroups: [""]
+  resources: ["resourcequotas", "limitranges"]
+  verbs: ["create", "get", "list", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["create", "get", "list", "delete"]

@@ -14,6 +14,7 @@ spec:
       labels:
         {{- include "forge-platform.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ .Values.forgePlatform.name }}
       containers:
       - name: {{ .Values.forgePlatform.name }}
         image: "{{ .Values.forgePlatform.image.repository }}:{{ .Values.forgePlatform.image.tag }}"
