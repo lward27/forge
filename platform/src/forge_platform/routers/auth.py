@@ -11,9 +11,34 @@ from forge_platform.schemas.auth import (
     ApiKeyListResponse,
     ApiKeyResponse,
 )
-from forge_platform.services import auth_service
+from forge_platform.services import auth_service, tenant_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.get("/me")
+def get_me(
+    session: Session = Depends(get_session),
+    auth=Depends(get_api_key),
+):
+    """Return info about the current API key and its tenant."""
+    if auth is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    result = {
+        "role": auth.role,
+        "key_name": auth.name,
+        "key_prefix": auth.key_prefix,
+        "tenant_id": str(auth.tenant_id) if auth.tenant_id else None,
+        "tenant_name": None,
+    }
+
+    if auth.tenant_id:
+        tenant = tenant_service.get_tenant(session, auth.tenant_id)
+        if tenant:
+            result["tenant_name"] = tenant.name
+
+    return result
 
 
 @router.post("/keys", response_model=ApiKeyResponse, status_code=201)
