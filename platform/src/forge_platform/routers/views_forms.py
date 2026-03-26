@@ -40,9 +40,8 @@ def list_views(
             raise HTTPException(status_code=404, detail="No default view found")
         return {"views": [_view_response(view)]}
 
-    view = view_form_service.get_default_view(session, tenant_db.id, table_name)
-    views = [_view_response(view)] if view else []
-    return {"views": views}
+    views = view_form_service.list_views(session, tenant_db.id, table_name)
+    return {"views": [_view_response(v) for v in views]}
 
 
 @router.get("/views/{view_id}")
@@ -79,6 +78,42 @@ def update_view(
     return _view_response(updated)
 
 
+@router.post("/views", status_code=201)
+def create_view(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    table_name: str,
+    body: dict,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+    name = body.get("name")
+    config = body.get("config", {})
+    if not name:
+        raise HTTPException(status_code=400, detail="'name' is required")
+
+    view = view_form_service.create_named_view(session, tenant_db.id, table_name, name, config)
+    return _view_response(view)
+
+
+@router.delete("/views/{view_id}")
+def delete_view(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    table_name: str,
+    view_id: uuid.UUID,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+    try:
+        deleted = view_form_service.delete_view(session, view_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not deleted:
+        raise HTTPException(status_code=404, detail="View not found")
+    return {"deleted": True}
+
+
 # ── Forms ──────────────────────────────────────────────
 
 @router.get("/forms")
@@ -97,9 +132,8 @@ def list_forms(
             raise HTTPException(status_code=404, detail="No default form found")
         return {"forms": [_form_response(form)]}
 
-    form = view_form_service.get_default_form(session, tenant_db.id, table_name)
-    forms = [_form_response(form)] if form else []
-    return {"forms": forms}
+    forms = view_form_service.list_forms(session, tenant_db.id, table_name)
+    return {"forms": [_form_response(f) for f in forms]}
 
 
 @router.get("/forms/{form_id}")
@@ -134,6 +168,42 @@ def update_form(
     config = body.get("config", body)
     updated = view_form_service.update_form(session, form_id, config)
     return _form_response(updated)
+
+
+@router.post("/forms", status_code=201)
+def create_form(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    table_name: str,
+    body: dict,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+    name = body.get("name")
+    config = body.get("config", {})
+    if not name:
+        raise HTTPException(status_code=400, detail="'name' is required")
+
+    form = view_form_service.create_named_form(session, tenant_db.id, table_name, name, config)
+    return _form_response(form)
+
+
+@router.delete("/forms/{form_id}")
+def delete_form(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    table_name: str,
+    form_id: uuid.UUID,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+    try:
+        deleted = view_form_service.delete_form(session, form_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Form not found")
+    return {"deleted": True}
 
 
 # ── Helpers ──────────────────────────────────────────────

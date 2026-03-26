@@ -166,6 +166,90 @@ def update_form(
     return form
 
 
+def list_views(
+    session: Session, database_id: uuid.UUID, table_name: str
+) -> list[TableView]:
+    return list(session.exec(
+        select(TableView).where(
+            TableView.database_id == database_id,
+            TableView.table_name == table_name,
+        )
+    ).all())
+
+
+def list_forms(
+    session: Session, database_id: uuid.UUID, table_name: str
+) -> list[TableForm]:
+    return list(session.exec(
+        select(TableForm).where(
+            TableForm.database_id == database_id,
+            TableForm.table_name == table_name,
+        )
+    ).all())
+
+
+def create_named_view(
+    session: Session,
+    database_id: uuid.UUID,
+    table_name: str,
+    name: str,
+    config: dict,
+) -> TableView:
+    view = TableView(
+        database_id=database_id,
+        table_name=table_name,
+        name=name,
+        is_default=False,
+        config=config,
+    )
+    session.add(view)
+    session.commit()
+    session.refresh(view)
+    return view
+
+
+def create_named_form(
+    session: Session,
+    database_id: uuid.UUID,
+    table_name: str,
+    name: str,
+    config: dict,
+) -> TableForm:
+    form = TableForm(
+        database_id=database_id,
+        table_name=table_name,
+        name=name,
+        is_default=False,
+        config=config,
+    )
+    session.add(form)
+    session.commit()
+    session.refresh(form)
+    return form
+
+
+def delete_view(session: Session, view_id: uuid.UUID) -> bool:
+    view = session.get(TableView, view_id)
+    if view is None:
+        return False
+    if view.is_default:
+        raise ValueError("Cannot delete the default view")
+    session.delete(view)
+    session.commit()
+    return True
+
+
+def delete_form(session: Session, form_id: uuid.UUID) -> bool:
+    form = session.get(TableForm, form_id)
+    if form is None:
+        return False
+    if form.is_default:
+        raise ValueError("Cannot delete the default form")
+    session.delete(form)
+    session.commit()
+    return True
+
+
 def discover_related_tables(
     session: Session, database_id: uuid.UUID, table_name: str
 ) -> list[dict]:
