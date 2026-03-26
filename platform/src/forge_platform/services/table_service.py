@@ -24,6 +24,7 @@ def create_table(
             "nullable": c.nullable,
             "unique": c.unique,
             "default": c.default,
+            "reference_table": c.reference_table,
         }
         for c in table_in.columns
     ]
@@ -67,6 +68,7 @@ def create_table(
                 primary_key=False,
                 unique=col.unique,
                 default_value=col.default,
+                reference_table=col.reference_table,
                 ordinal=i,
             )
         )
@@ -146,6 +148,7 @@ def alter_table(
                 "nullable": c.nullable,
                 "unique": c.unique,
                 "default": c.default,
+                "reference_table": c.reference_table,
             }
             for c in alter_in.add_columns
         ]
@@ -176,6 +179,7 @@ def alter_table(
                 primary_key=False,
                 unique=col.unique,
                 default_value=col.default,
+                reference_table=col.reference_table,
                 ordinal=i,
             )
         )

@@ -157,10 +157,24 @@ Separate React app (own git repo) for tenant users. The core low-code experience
 
 **Deliverable:** Non-technical tenant users can define data models and manage data through a friendly web interface.
 
-### Wave 2.4 — Tenant Portal Polish & UX
-> Detailed plan: `planning/phase2/wave2_4_portal_polish.md`
+### Wave 2.4 — Table Relationships
+> Detailed plan: `planning/phase2/wave2_4_table_relationships.md`
 
-Refinements based on real usage of Wave 2.3:
+Foreign key relationships between tables — the core relational data model.
+
+- **Reference column type** — `customer_id` on contacts references `customers.id`
+- Real PG foreign key constraints for data integrity
+- **Portal**: reference fields render as searchable dropdowns
+- **Portal**: parent record slide-out shows "Related Records" section
+- **Expand query**: `?expand=customer_id` returns referenced record inline
+- **Related endpoint**: `GET .../rows/{pk}/related` returns child records
+
+**Deliverable:** Users can create parent-child relationships between tables through the portal.
+
+### Wave 2.5 — Portal Polish & UX
+> Detailed plan: `planning/phase2/wave2_5_portal_polish.md`
+
+Refinements based on real usage:
 
 - **Search** across tables and records
 - **Export** data (CSV download)
@@ -233,10 +247,11 @@ Phase 2 (Current)
   Wave 2.1 (API Key Auth)
     ├→ Wave 2.2 (Admin Panel)
     └→ Wave 2.3 (Tenant Portal)
-         └→ Wave 2.4 (Portal Polish)
+         └→ Wave 2.4 (Table Relationships)
+              └→ Wave 2.5 (Portal Polish)
 
 Phase 3
-  Wave 2.3 (Tenant Portal)
+  Wave 2.5 (Portal Polish)
     └→ Wave 3.1 (AI Chat) → 3.2 (Refinement) → 3.3 (Templates)
 
 Phase 4

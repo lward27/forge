@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_validator
 
 VALID_TYPES = {
     "text", "integer", "biginteger", "decimal", "boolean",
-    "date", "timestamp", "json", "serial",
+    "date", "timestamp", "json", "serial", "reference",
 }
 
 PG_TYPE_MAP = {
@@ -41,6 +41,7 @@ class ColumnCreate(BaseModel):
     nullable: bool = True
     unique: bool = False
     default: Optional[str] = None
+    reference_table: Optional[str] = None
 
     @field_validator("name")
     @classmethod
@@ -91,6 +92,7 @@ class ColumnResponse(BaseModel):
     primary_key: bool
     unique: bool
     default: Optional[str]
+    reference_table: Optional[str] = None
 
 
 class TableResponse(BaseModel):

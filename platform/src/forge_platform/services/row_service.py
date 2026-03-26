@@ -72,6 +72,8 @@ def _coerce_value(value: Any, column_type: str, column_name: str) -> Any:
     try:
         if column_type in ("text",):
             return str(value)
+        elif column_type in ("reference",):
+            return int(value)
         elif column_type in ("integer",):
             return int(value)
         elif column_type in ("biginteger",):
@@ -262,3 +264,56 @@ def delete_row(
         table_name=table_name,
         pk_value=pk_value,
     )
+
+
+def expand_rows(
+    session: Session,
+    tenant_db: TenantDatabase,
+    table_name: str,
+    rows: list[dict],
+    expand: list[str],
+) -> list[dict]:
+    """Expand reference columns on a list of rows."""
+    columns, _ = _get_table_context(session, tenant_db, table_name)
+    ref_cols = [
+        {"name": c.name, "reference_table": c.reference_table}
+        for c in columns
+        if c.column_type == "reference" and c.reference_table and c.name in expand
+    ]
+    if not ref_cols:
+        return rows
+
+    return postgres_service.expand_references(
+        pg_database=tenant_db.pg_database,
+        rows=rows,
+        expand_cols=ref_cols,
+    )
+
+
+def get_related_records(
+    session: Session,
+    tenant_db: TenantDatabase,
+    table_name: str,
+    pk_value: int,
+) -> list[dict]:
+    """Find all tables with reference columns pointing to this table and return matching rows."""
+    # Get all tables in this database
+    all_tables = table_service.list_tables(session, tenant_db.id)
+
+    related = []
+    for tbl_def, cols in all_tables:
+        for col in cols:
+            if col.column_type == "reference" and col.reference_table == table_name:
+                result = postgres_service.select_related_rows(
+                    pg_database=tenant_db.pg_database,
+                    ref_table_name=tbl_def.name,
+                    ref_column=col.name,
+                    pk_value=pk_value,
+                )
+                related.append({
+                    "table": tbl_def.name,
+                    "column": col.name,
+                    "count": result["count"],
+                    "rows": result["rows"],
+                })
+    return related

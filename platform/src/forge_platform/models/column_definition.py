@@ -16,6 +16,7 @@ class ColumnDefinition(SQLModel, table=True):
     primary_key: bool = Field(default=False)
     unique: bool = Field(default=False)
     default_value: Optional[str] = Field(default=None)
+    reference_table: Optional[str] = Field(default=None)
     ordinal: int = Field(default=0)
     status: str = Field(default="active")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

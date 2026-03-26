@@ -44,6 +44,7 @@ def _table_response(table_def, columns, database_id) -> TableResponse:
                 primary_key=c.primary_key,
                 unique=c.unique,
                 default=c.default_value,
+                reference_table=c.reference_table,
             )
             for c in columns
         ],

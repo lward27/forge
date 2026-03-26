@@ -50,6 +50,7 @@ def _mock_columns():
     id_col.primary_key = True
     id_col.unique = False
     id_col.default_value = None
+    id_col.reference_table = None
 
     name_col = MagicMock()
     name_col.name = "name"
@@ -58,6 +59,7 @@ def _mock_columns():
     name_col.primary_key = False
     name_col.unique = False
     name_col.default_value = None
+    name_col.reference_table = None
 
     return [id_col, name_col]
 
@@ -149,6 +151,7 @@ def test_alter_table_add_column(mock_alter, mock_get_db, mock_get_tenant):
     phone_col.primary_key = False
     phone_col.unique = False
     phone_col.default_value = None
+    phone_col.reference_table = None
     cols.append(phone_col)
     mock_alter.return_value = (_mock_table_def(), cols)
 

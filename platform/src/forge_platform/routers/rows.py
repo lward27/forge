@@ -63,6 +63,7 @@ def list_rows(
     table_name: str,
     filter: Optional[list[str]] = Query(None),
     sort: Optional[str] = Query(None),
+    expand: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     session: Session = Depends(get_session),
@@ -74,6 +75,9 @@ def list_rows(
             session, tenant_db, table_name,
             filters=filter, sort=sort, limit=limit, offset=offset,
         )
+        if expand:
+            expand_cols = [c.strip() for c in expand.split(",")]
+            rows = row_service.expand_rows(session, tenant_db, table_name, rows, expand_cols)
     except LookupError:
         raise HTTPException(status_code=404, detail="Table not found")
     except ValueError as e:
@@ -176,3 +180,21 @@ def create_rows_batch(
         raise
 
     return RowBatchResponse(inserted=len(rows), rows=rows)
+
+
+@router.get("/{pk}/related")
+def get_related(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    table_name: str,
+    pk: int,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+
+    try:
+        related = row_service.get_related_records(session, tenant_db, table_name, pk)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Table not found")
+
+    return {"related": related}

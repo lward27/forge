@@ -134,15 +134,24 @@ def create_table(
         # Build column definitions
         col_parts = [sql.SQL("id SERIAL PRIMARY KEY")]
         for col in columns:
-            pg_type = pg_type_map[col["type"]]
-            parts = [sql.Identifier(col["name"]), sql.SQL(pg_type)]
-            if not col.get("nullable", True):
-                parts.append(sql.SQL("NOT NULL"))
-            if col.get("unique", False):
-                parts.append(sql.SQL("UNIQUE"))
-            if col.get("default") is not None:
-                parts.append(sql.SQL("DEFAULT"))
-                parts.append(sql.SQL(col["default"]))
+            if col["type"] == "reference":
+                # Reference column: INTEGER with FK constraint
+                parts = [sql.Identifier(col["name"]), sql.SQL("INTEGER")]
+                if not col.get("nullable", True):
+                    parts.append(sql.SQL("NOT NULL"))
+                parts.append(sql.SQL("REFERENCES"))
+                parts.append(sql.Identifier(col["reference_table"]))
+                parts.append(sql.SQL("(id)"))
+            else:
+                pg_type = pg_type_map[col["type"]]
+                parts = [sql.Identifier(col["name"]), sql.SQL(pg_type)]
+                if not col.get("nullable", True):
+                    parts.append(sql.SQL("NOT NULL"))
+                if col.get("unique", False):
+                    parts.append(sql.SQL("UNIQUE"))
+                if col.get("default") is not None:
+                    parts.append(sql.SQL("DEFAULT"))
+                    parts.append(sql.SQL(col["default"]))
             col_parts.append(sql.SQL(" ").join(parts))
 
         create_stmt = sql.SQL("CREATE TABLE {} ({})").format(
@@ -193,21 +202,29 @@ def add_columns(
     try:
         cur = conn.cursor()
         for col in columns:
-            pg_type = pg_type_map[col["type"]]
             parts = [
                 sql.SQL("ALTER TABLE"),
                 sql.Identifier(table_name),
                 sql.SQL("ADD COLUMN"),
                 sql.Identifier(col["name"]),
-                sql.SQL(pg_type),
             ]
-            if not col.get("nullable", True):
-                parts.append(sql.SQL("NOT NULL"))
-            if col.get("unique", False):
-                parts.append(sql.SQL("UNIQUE"))
-            if col.get("default") is not None:
-                parts.append(sql.SQL("DEFAULT"))
-                parts.append(sql.SQL(col["default"]))
+            if col["type"] == "reference":
+                parts.append(sql.SQL("INTEGER"))
+                if not col.get("nullable", True):
+                    parts.append(sql.SQL("NOT NULL"))
+                parts.append(sql.SQL("REFERENCES"))
+                parts.append(sql.Identifier(col["reference_table"]))
+                parts.append(sql.SQL("(id)"))
+            else:
+                pg_type = pg_type_map[col["type"]]
+                parts.append(sql.SQL(pg_type))
+                if not col.get("nullable", True):
+                    parts.append(sql.SQL("NOT NULL"))
+                if col.get("unique", False):
+                    parts.append(sql.SQL("UNIQUE"))
+                if col.get("default") is not None:
+                    parts.append(sql.SQL("DEFAULT"))
+                    parts.append(sql.SQL(col["default"]))
             cur.execute(sql.SQL(" ").join(parts))
             logger.info("Added column %s to %s.%s", col["name"], pg_database, table_name)
         cur.close()
@@ -464,5 +481,82 @@ def delete_row(
         deleted = cur.rowcount > 0
         cur.close()
         return deleted
+    finally:
+        conn.close()
+
+
+def expand_references(
+    pg_database: str,
+    rows: list[dict],
+    expand_cols: list[dict],
+) -> list[dict]:
+    """Expand reference columns by fetching the referenced rows."""
+    if not expand_cols or not rows:
+        return rows
+
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        for col_info in expand_cols:
+            col_name = col_info["name"]
+            ref_table = col_info["reference_table"]
+
+            # Collect all referenced IDs
+            ref_ids = list({r[col_name] for r in rows if r.get(col_name) is not None})
+            if not ref_ids:
+                continue
+
+            # Fetch referenced rows
+            placeholders = sql.SQL(", ").join(sql.Placeholder() for _ in ref_ids)
+            stmt = sql.SQL("SELECT * FROM {} WHERE id IN ({})").format(
+                sql.Identifier(ref_table), placeholders
+            )
+            cur.execute(stmt, ref_ids)
+            col_names = [desc[0] for desc in cur.description]
+            ref_rows = {r[0]: dict(zip(col_names, r)) for r in cur.fetchall()}
+
+            # Attach expanded data
+            for row in rows:
+                ref_id = row.get(col_name)
+                row[f"{col_name}__expanded"] = ref_rows.get(ref_id) if ref_id else None
+
+        cur.close()
+        return rows
+    finally:
+        conn.close()
+
+
+def select_related_rows(
+    pg_database: str,
+    ref_table_name: str,
+    ref_column: str,
+    pk_value: int,
+    limit: int = 50,
+) -> list[dict]:
+    """Select rows from a table where a reference column matches the given PK."""
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        stmt = sql.SQL("SELECT * FROM {} WHERE {} = {} LIMIT {}").format(
+            sql.Identifier(ref_table_name),
+            sql.Identifier(ref_column),
+            sql.Placeholder(),
+            sql.Literal(limit),
+        )
+        cur.execute(stmt, [pk_value])
+        col_names = [desc[0] for desc in cur.description]
+        rows = [dict(zip(col_names, r)) for r in cur.fetchall()]
+
+        # Get count
+        count_stmt = sql.SQL("SELECT COUNT(*) FROM {} WHERE {} = {}").format(
+            sql.Identifier(ref_table_name),
+            sql.Identifier(ref_column),
+            sql.Placeholder(),
+        )
+        cur.execute(count_stmt, [pk_value])
+        count = cur.fetchone()[0]
+
+        cur.close()
+        return {"count": count, "rows": rows}
     finally:
         conn.close()
