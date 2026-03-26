@@ -14,6 +14,6 @@ forgeAdmin:
   ingress:
     enabled: true
     className: nginx
-    host: admin.forge.lucas.engineering
+    host: forge-admin.lucas.engineering
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod

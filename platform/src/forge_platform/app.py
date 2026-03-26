@@ -48,8 +48,8 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://admin.forge.lucas.engineering",
-        "https://app.forge.lucas.engineering",
+        "https://forge-admin.lucas.engineering",
+        "https://forge-portal.lucas.engineering",
         "http://localhost:5173",
     ],
     allow_methods=["*"],
