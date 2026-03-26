@@ -191,6 +191,14 @@ def alter_table(
                 col.status = "deleted"
                 session.add(col)
 
+    # Update platform DB: reorder columns
+    if alter_in.reorder_columns:
+        col_map = {c.name: c for c in existing_cols}
+        for reorder in alter_in.reorder_columns:
+            if reorder.name in col_map:
+                col_map[reorder.name].ordinal = reorder.ordinal
+                session.add(col_map[reorder.name])
+
     table_def.updated_at = datetime.now(timezone.utc)
     session.add(table_def)
     session.commit()

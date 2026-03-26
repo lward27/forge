@@ -266,6 +266,22 @@ def delete_row(
     )
 
 
+def bulk_delete_rows(
+    session: Session,
+    tenant_db: TenantDatabase,
+    table_name: str,
+    ids: list[int],
+) -> int:
+    """Delete multiple rows by IDs."""
+    _get_table_context(session, tenant_db, table_name)
+
+    return postgres_service.bulk_delete_rows(
+        pg_database=tenant_db.pg_database,
+        table_name=table_name,
+        ids=ids,
+    )
+
+
 def expand_rows(
     session: Session,
     tenant_db: TenantDatabase,

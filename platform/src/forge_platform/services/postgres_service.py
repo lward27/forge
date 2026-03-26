@@ -485,6 +485,31 @@ def delete_row(
         conn.close()
 
 
+def bulk_delete_rows(
+    pg_database: str,
+    table_name: str,
+    ids: list[int],
+) -> int:
+    """Delete multiple rows by ID. Returns count deleted."""
+    if not ids:
+        return 0
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        placeholders = sql.SQL(", ").join(sql.Placeholder() for _ in ids)
+        stmt = sql.SQL("DELETE FROM {} WHERE {} IN ({})").format(
+            sql.Identifier(table_name),
+            sql.Identifier("id"),
+            placeholders,
+        )
+        cur.execute(stmt, ids)
+        deleted = cur.rowcount
+        cur.close()
+        return deleted
+    finally:
+        conn.close()
+
+
 def expand_references(
     pg_database: str,
     rows: list[dict],

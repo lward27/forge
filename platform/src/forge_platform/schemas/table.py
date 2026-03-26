@@ -80,9 +80,15 @@ class TableCreate(BaseModel):
         return v
 
 
+class ColumnReorder(BaseModel):
+    name: str
+    ordinal: int
+
+
 class TableAlter(BaseModel):
     add_columns: list[ColumnCreate] = []
     drop_columns: list[str] = []
+    reorder_columns: list[ColumnReorder] = []
 
 
 class ColumnResponse(BaseModel):

@@ -198,3 +198,25 @@ def get_related(
         raise HTTPException(status_code=404, detail="Table not found")
 
     return {"related": related}
+
+
+@router.post("/bulk-delete")
+def bulk_delete_rows(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    table_name: str,
+    body: dict,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+
+    ids = body.get("ids", [])
+    if not ids or not isinstance(ids, list):
+        raise HTTPException(status_code=400, detail="'ids' must be a non-empty list")
+
+    try:
+        deleted = row_service.bulk_delete_rows(session, tenant_db, table_name, ids)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Table not found")
+
+    return {"deleted": deleted}
