@@ -64,7 +64,7 @@ def list_rows(
     filter: Optional[list[str]] = Query(None),
     sort: Optional[str] = Query(None),
     expand: Optional[str] = Query(None),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=10000),
     offset: int = Query(0, ge=0),
     session: Session = Depends(get_session),
 ):
