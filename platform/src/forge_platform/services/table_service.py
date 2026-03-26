@@ -36,10 +36,19 @@ def create_table(
         pg_type_map=PG_TYPE_MAP,
     )
 
+    # Auto-detect display_field if not specified
+    display_field = table_in.display_field
+    if not display_field:
+        for c in table_in.columns:
+            if c.type == "text":
+                display_field = c.name
+                break
+
     # Track in platform DB
     table_def = TableDefinition(
         database_id=tenant_db.id,
         name=table_in.name,
+        display_field=display_field,
     )
     session.add(table_def)
     session.flush()
@@ -198,6 +207,10 @@ def alter_table(
             if reorder.name in col_map:
                 col_map[reorder.name].ordinal = reorder.ordinal
                 session.add(col_map[reorder.name])
+
+    # Update display_field if specified
+    if alter_in.display_field is not None:
+        table_def.display_field = alter_in.display_field
 
     table_def.updated_at = datetime.now(timezone.utc)
     session.add(table_def)

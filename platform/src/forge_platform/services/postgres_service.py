@@ -485,6 +485,32 @@ def delete_row(
         conn.close()
 
 
+def fetch_display_values(
+    pg_database: str,
+    table_name: str,
+    display_field: str,
+    ids: list[int],
+) -> dict[int, str]:
+    """Fetch display field values for a list of IDs. Returns {id: display_value}."""
+    if not ids:
+        return {}
+    conn = _get_admin_connection(dbname=pg_database)
+    try:
+        cur = conn.cursor()
+        placeholders = sql.SQL(", ").join(sql.Placeholder() for _ in ids)
+        stmt = sql.SQL("SELECT id, {} FROM {} WHERE id IN ({})").format(
+            sql.Identifier(display_field),
+            sql.Identifier(table_name),
+            placeholders,
+        )
+        cur.execute(stmt, ids)
+        result = {row[0]: str(row[1]) if row[1] is not None else None for row in cur.fetchall()}
+        cur.close()
+        return result
+    finally:
+        conn.close()
+
+
 def bulk_delete_rows(
     pg_database: str,
     table_name: str,

@@ -184,6 +184,33 @@ Refinements based on real usage:
 - **Responsive design** — usable on tablet/mobile
 - **Loading states and error handling** — skeleton loaders, friendly error messages
 
+### Wave 2.6 — Display Fields & Record Detail Page
+> Detailed plan: `planning/phase2/wave2_6_display_fields_and_detail_page.md`
+
+Reference columns show human-readable values. Record detail becomes a full page.
+
+- **Display field per table** — configurable column used to represent records everywhere (dropdowns, child tables, data view)
+- **Auto-detected** on table creation (first non-PK text column), configurable in schema builder
+- **Reference columns auto-join** display values in row list responses (`customer_id__display: "Acme Corp"`)
+- **Full-page record detail** at `/tables/{name}/records/{id}` — replaces slide-out for viewing/editing
+- **Related records in wide layout** — child tables shown below the form with full-width tables
+- **"+ Add" on related sections** — creates child record with FK pre-filled
+
+**Deliverable:** Reference columns are human-readable. Record detail is a full page with wide related record views.
+
+### Wave 2.7 — Views & Forms
+> Detailed plan: `planning/phase2/wave2_7_views_and_forms.md`
+
+Auto-generated default view and form per table, configurable through the portal.
+
+- **View** — configures the data table: which columns visible, order, default sort, page size
+- **Form** — configures the record detail: field sections, field order, which related tables to show
+- **Auto-generated** on table create/update — always reflects current schema
+- **Customizable** — view/form customizer UI to toggle visibility, reorder, configure related tables
+- Future Wave 2.8 extends to multiple named views/forms per table
+
+**Deliverable:** Tables have configurable list views and detail forms that auto-update with schema changes.
+
 ---
 
 ## Phase 3 — AI-Driven Interface
@@ -249,9 +276,12 @@ Phase 2 (Current)
     └→ Wave 2.3 (Tenant Portal)
          └→ Wave 2.4 (Table Relationships)
               └→ Wave 2.5 (Portal Polish)
+                   └→ Wave 2.6 (Display Fields & Detail Page)
+                        └→ Wave 2.7 (Views & Forms)
+                             └→ Future: Wave 2.8 (Multiple Named Views/Forms)
 
 Phase 3
-  Wave 2.5 (Portal Polish)
+  Wave 2.7 (Views & Forms)
     └→ Wave 3.1 (AI Chat) → 3.2 (Refinement) → 3.3 (Templates)
 
 Phase 4

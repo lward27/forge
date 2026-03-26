@@ -10,6 +10,52 @@ from forge_platform.schemas.row import VALID_OPERATORS, ParsedFilter, parse_filt
 from forge_platform.services import postgres_service, table_service
 
 
+def _enrich_display_values(
+    session: Session,
+    tenant_db: TenantDatabase,
+    columns: list[ColumnDefinition],
+    rows: list[dict],
+) -> list[dict]:
+    """Add __display values for reference columns."""
+    if not rows:
+        return rows
+
+    ref_cols = [c for c in columns if c.column_type == "reference" and c.reference_table]
+    if not ref_cols:
+        return rows
+
+    for ref_col in ref_cols:
+        # Get the display_field for the referenced table
+        ref_table_result = table_service.get_table(session, tenant_db.id, ref_col.reference_table)
+        if ref_table_result is None:
+            continue
+
+        ref_table_def, _ = ref_table_result
+        display_field = ref_table_def.display_field
+        if not display_field:
+            continue
+
+        # Collect referenced IDs
+        ref_ids = list({r[ref_col.name] for r in rows if r.get(ref_col.name) is not None})
+        if not ref_ids:
+            continue
+
+        # Fetch display values
+        display_map = postgres_service.fetch_display_values(
+            pg_database=tenant_db.pg_database,
+            table_name=ref_col.reference_table,
+            display_field=display_field,
+            ids=ref_ids,
+        )
+
+        # Attach to rows
+        for row in rows:
+            ref_id = row.get(ref_col.name)
+            row[f"{ref_col.name}__display"] = display_map.get(ref_id) if ref_id else None
+
+    return rows
+
+
 def _get_table_context(
     session: Session, tenant_db: TenantDatabase, table_name: str
 ) -> tuple[list[ColumnDefinition], list[str]]:
@@ -197,7 +243,7 @@ def list_rows(
                 f"Valid columns: {', '.join(sorted(c.name for c in columns))}"
             )
 
-    return postgres_service.select_rows(
+    rows, total = postgres_service.select_rows(
         pg_database=tenant_db.pg_database,
         table_name=table_name,
         columns=col_names,
@@ -208,6 +254,11 @@ def list_rows(
         offset=offset,
     )
 
+    # Auto-join display values for reference columns
+    rows = _enrich_display_values(session, tenant_db, columns, rows)
+
+    return rows, total
+
 
 def get_row(
     session: Session,
@@ -216,14 +267,19 @@ def get_row(
     pk_value: int,
 ) -> dict | None:
     """Get a single row by primary key."""
-    _, col_names = _get_table_context(session, tenant_db, table_name)
+    columns, col_names = _get_table_context(session, tenant_db, table_name)
 
-    return postgres_service.select_row_by_pk(
+    row = postgres_service.select_row_by_pk(
         pg_database=tenant_db.pg_database,
         table_name=table_name,
         columns=col_names,
         pk_value=pk_value,
     )
+    if row is None:
+        return None
+
+    enriched = _enrich_display_values(session, tenant_db, columns, [row])
+    return enriched[0]
 
 
 def update_row(

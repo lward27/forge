@@ -35,6 +35,7 @@ def _get_tenant_and_db(session: Session, tenant_id: uuid.UUID, db_id: uuid.UUID)
 def _table_response(table_def, columns, database_id) -> TableResponse:
     return TableResponse(
         name=table_def.name,
+        display_field=table_def.display_field,
         database_id=database_id,
         columns=[
             ColumnResponse(

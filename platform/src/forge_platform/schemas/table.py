@@ -67,6 +67,7 @@ class ColumnCreate(BaseModel):
 class TableCreate(BaseModel):
     name: str
     columns: list[ColumnCreate]
+    display_field: Optional[str] = None
 
     @field_validator("name")
     @classmethod
@@ -89,6 +90,7 @@ class TableAlter(BaseModel):
     add_columns: list[ColumnCreate] = []
     drop_columns: list[str] = []
     reorder_columns: list[ColumnReorder] = []
+    display_field: Optional[str] = None
 
 
 class ColumnResponse(BaseModel):
@@ -103,6 +105,7 @@ class ColumnResponse(BaseModel):
 
 class TableResponse(BaseModel):
     name: str
+    display_field: Optional[str] = None
     database_id: uuid.UUID
     columns: list[ColumnResponse]
     created_at: datetime
