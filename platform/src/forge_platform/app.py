@@ -7,9 +7,10 @@ from sqlmodel import SQLModel, Session
 from forge_platform.database import get_engine, get_session
 from forge_platform.middleware.auth import get_api_key
 from forge_platform.models import (  # noqa: F401
-    ApiKey, ColumnDefinition, TableDefinition, Tenant, TenantDatabase,
+    ApiKey, ColumnDefinition, TableDefinition, TableForm, TableView,
+    Tenant, TenantDatabase,
 )
-from forge_platform.routers import auth, databases, health, rows, tables, tenants
+from forge_platform.routers import auth, databases, health, rows, tables, tenants, views_forms
 from forge_platform.services import auth_service, kubernetes_service
 
 logger = logging.getLogger(__name__)
@@ -65,3 +66,4 @@ app.include_router(tenants.router, dependencies=[Depends(get_api_key)])
 app.include_router(databases.router, dependencies=[Depends(get_api_key)])
 app.include_router(tables.router, dependencies=[Depends(get_api_key)])
 app.include_router(rows.router, dependencies=[Depends(get_api_key)])
+app.include_router(views_forms.router, dependencies=[Depends(get_api_key)])

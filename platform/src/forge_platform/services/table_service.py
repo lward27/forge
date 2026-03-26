@@ -7,7 +7,7 @@ from forge_platform.models.column_definition import ColumnDefinition
 from forge_platform.models.table_definition import TableDefinition
 from forge_platform.models.tenant_database import TenantDatabase
 from forge_platform.schemas.table import ColumnCreate, PG_TYPE_MAP, TableCreate, TableAlter
-from forge_platform.services import postgres_service
+from forge_platform.services import postgres_service, view_form_service
 
 
 def create_table(
@@ -87,6 +87,12 @@ def create_table(
 
     session.commit()
     session.refresh(table_def)
+
+    # Auto-generate default view and form
+    related = view_form_service.discover_related_tables(session, tenant_db.id, table_in.name)
+    view_form_service.generate_default_view(session, tenant_db.id, table_in.name, col_defs)
+    view_form_service.generate_default_form(session, tenant_db.id, table_in.name, col_defs, related)
+
     return table_def, col_defs
 
 
@@ -218,6 +224,13 @@ def alter_table(
     session.refresh(table_def)
 
     updated_cols = _get_active_columns(session, table_def.id)
+
+    # Regenerate default view and form on schema change
+    if alter_in.add_columns or alter_in.drop_columns:
+        related = view_form_service.discover_related_tables(session, tenant_db.id, table_name)
+        view_form_service.generate_default_view(session, tenant_db.id, table_name, updated_cols)
+        view_form_service.generate_default_form(session, tenant_db.id, table_name, updated_cols, related)
+
     return table_def, updated_cols
 
 
