@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.forgePortal.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.forgePortal.name }}
+spec:
+  replicas: {{ .Values.forgePortal.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.forgePortal.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.forgePortal.name }}
+    spec:
+      containers:
+      - name: {{ .Values.forgePortal.name }}
+        image: "{{ .Values.forgePortal.image.repository }}:{{ .Values.forgePortal.image.tag }}"
+        imagePullPolicy: {{ .Values.forgePortal.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 10

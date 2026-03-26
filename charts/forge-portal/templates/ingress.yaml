@@ -1,0 +1,25 @@
+{{- if .Values.forgePortal.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.forgePortal.name }}
+  annotations:
+    {{- toYaml .Values.forgePortal.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.forgePortal.ingress.className }}
+  rules:
+  - host: {{ .Values.forgePortal.ingress.host }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.forgePortal.name }}
+            port:
+              number: {{ .Values.forgePortal.service.port }}
+  tls:
+  - hosts:
+    - {{ .Values.forgePortal.ingress.host }}
+    secretName: {{ .Values.forgePortal.ingress.host | replace "." "-" }}-tls
+{{- end }}

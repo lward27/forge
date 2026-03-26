@@ -1,0 +1,19 @@
+forgePortal:
+  name: forge-portal
+  replicaCount: 1
+
+  image:
+    repository: registry.lucas.engineering/forge_portal
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: forge-portal.lucas.engineering
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod

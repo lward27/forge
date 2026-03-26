@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.forgePortal.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.forgePortal.name }}
+spec:
+  type: {{ .Values.forgePortal.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ .Values.forgePortal.name }}
+  ports:
+  - port: {{ .Values.forgePortal.service.port }}
+    targetPort: 80
+    protocol: TCP
