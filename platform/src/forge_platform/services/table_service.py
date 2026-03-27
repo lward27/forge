@@ -88,10 +88,15 @@ def create_table(
     session.commit()
     session.refresh(table_def)
 
-    # Auto-generate default view and form
+    # Auto-generate default view and form for this table
     related = view_form_service.discover_related_tables(session, tenant_db.id, table_in.name)
     view_form_service.generate_default_view(session, tenant_db.id, table_in.name, col_defs)
     view_form_service.generate_default_form(session, tenant_db.id, table_in.name, col_defs, related)
+
+    # Refresh parent table forms to discover this new child table
+    for col in table_in.columns:
+        if col.type == "reference" and col.reference_table:
+            _refresh_parent_form(session, tenant_db.id, col.reference_table)
 
     return table_def, col_defs
 
@@ -231,6 +236,11 @@ def alter_table(
         view_form_service.generate_default_view(session, tenant_db.id, table_name, updated_cols)
         view_form_service.generate_default_form(session, tenant_db.id, table_name, updated_cols, related)
 
+        # Refresh parent table forms for new reference columns
+        for col in alter_in.add_columns:
+            if col.type == "reference" and col.reference_table:
+                _refresh_parent_form(session, tenant_db.id, col.reference_table)
+
     return table_def, updated_cols
 
 
@@ -261,6 +271,18 @@ def delete_table(
     session.commit()
     session.refresh(table_def)
     return table_def
+
+
+def _refresh_parent_form(
+    session: Session, database_id: uuid.UUID, parent_table_name: str
+) -> None:
+    """Regenerate the parent table's default form to discover new child tables."""
+    parent_result = get_table(session, database_id, parent_table_name)
+    if parent_result is None:
+        return
+    parent_def, parent_cols = parent_result
+    related = view_form_service.discover_related_tables(session, database_id, parent_table_name)
+    view_form_service.generate_default_form(session, database_id, parent_table_name, parent_cols, related)
 
 
 def _get_active_columns(
