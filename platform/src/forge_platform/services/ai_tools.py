@@ -150,6 +150,22 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "update_row",
+            "description": "Update an existing record in a table by its ID",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "table_name": {"type": "string"},
+                    "row_id": {"type": "integer", "description": "The ID of the row to update"},
+                    "data": {"type": "object", "description": "Field name to new value mapping (only include fields to change)"},
+                },
+                "required": ["table_name", "row_id", "data"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "create_view",
             "description": "Create a named view for a table with specific columns, sort, and filters",
             "parameters": {
@@ -235,6 +251,8 @@ def execute_tool(
             return _create_row(session, tenant_db, args)
         elif tool_name == "count_rows":
             return _count_rows(session, tenant_db, args)
+        elif tool_name == "update_row":
+            return _update_row(session, tenant_db, args)
         elif tool_name == "create_view":
             return _create_view(session, tenant_db, args)
         elif tool_name == "create_dashboard":
@@ -348,6 +366,15 @@ def _count_rows(session, tenant_db, args):
         limit=1,
     )
     return {"count": total}
+
+
+def _update_row(session, tenant_db, args):
+    result = row_service.update_row(
+        session, tenant_db, args["table_name"], args["row_id"], args["data"]
+    )
+    if result is None:
+        return {"error": f"Row {args['row_id']} not found in '{args['table_name']}'"}
+    return {"success": True, "row": result}
 
 
 def _create_view(session, tenant_db, args):
