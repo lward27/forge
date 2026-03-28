@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
-MAX_TOOL_ROUNDS = 5  # prevent infinite tool loops
+MAX_TOOL_ROUNDS = 3  # keep responses fast to avoid connection timeouts
 
 
 @router.post("/chat")

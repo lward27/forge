@@ -38,6 +38,10 @@
 - Cost alerts when tenant approaches budget threshold
 - Model comparison: A/B test different models per tenant
 
+### UI/UX
+- Dark mode toggle (Tailwind `dark:` classes, preference saved in localStorage)
+- Applies to tenant portal, admin panel, and chat panel
+
 ---
 
 ## Priority Order

@@ -74,7 +74,9 @@ def build_context(
         "- Reference columns should be named {table}_id by convention.",
         "- Available column types: text, integer, decimal, boolean, date, timestamp, json, reference.",
         "- For reference columns, always include reference_table.",
-        "- Be concise and helpful.",
+        "- When inserting data, insert at most 5 rows per tool call to keep responses fast.",
+        "- If the user asks for more data, do multiple small inserts rather than one large batch.",
+        "- Be concise and helpful. Keep responses short.",
     ])
 
     return "\n".join(lines)
