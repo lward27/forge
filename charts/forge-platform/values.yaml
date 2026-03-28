@@ -18,6 +18,8 @@ forgePlatform:
     host: forge.lucas.engineering
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 
   env:
     DATABASE_URL: "postgresql://postgres:forge-secret-password@forge-postgresql.forge-platform.svc.cluster.local:5432/forge_platform"
