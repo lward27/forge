@@ -2,7 +2,20 @@
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
+from decimal import Decimal
+
+
+class SafeEncoder(json.JSONEncoder):
+    """JSON encoder that handles Decimal, datetime, date, UUID, etc."""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return super().default(obj)
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
@@ -123,7 +136,7 @@ def chat(
             llm_messages.append({
                 "role": "tool",
                 "tool_call_id": tc.get("id", ""),
-                "content": json.dumps(tool_result),
+                "content": json.dumps(tool_result, cls=SafeEncoder),
             })
 
     # Save conversation
