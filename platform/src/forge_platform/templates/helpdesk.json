@@ -1,0 +1,51 @@
+{
+  "name": "Helpdesk",
+  "description": "Support ticket management — track tickets, customers, agents, and comments",
+  "icon": "headphones",
+  "tables": [
+    {
+      "name": "customers",
+      "display_field": "customer_name",
+      "columns": [
+        {"name": "customer_name", "type": "text", "nullable": false},
+        {"name": "email", "type": "text", "unique": true, "nullable": false},
+        {"name": "phone", "type": "text"},
+        {"name": "company", "type": "text"}
+      ]
+    },
+    {
+      "name": "agents",
+      "display_field": "agent_name",
+      "columns": [
+        {"name": "agent_name", "type": "text", "nullable": false},
+        {"name": "email", "type": "text", "unique": true},
+        {"name": "department", "type": "text"},
+        {"name": "is_available", "type": "boolean", "default": "true"}
+      ]
+    },
+    {
+      "name": "tickets",
+      "display_field": "subject",
+      "columns": [
+        {"name": "subject", "type": "text", "nullable": false},
+        {"name": "description", "type": "text"},
+        {"name": "status", "type": "text", "nullable": false},
+        {"name": "priority", "type": "text", "nullable": false},
+        {"name": "created_date", "type": "timestamp"},
+        {"name": "customer_id", "type": "reference", "reference_table": "customers"},
+        {"name": "agent_id", "type": "reference", "reference_table": "agents"}
+      ]
+    },
+    {
+      "name": "comments",
+      "display_field": null,
+      "columns": [
+        {"name": "message", "type": "text", "nullable": false},
+        {"name": "is_internal", "type": "boolean", "default": "false"},
+        {"name": "created_date", "type": "timestamp"},
+        {"name": "ticket_id", "type": "reference", "reference_table": "tickets"},
+        {"name": "agent_id", "type": "reference", "reference_table": "agents"}
+      ]
+    }
+  ]
+}

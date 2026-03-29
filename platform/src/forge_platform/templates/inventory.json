@@ -1,0 +1,47 @@
+{
+  "name": "Inventory",
+  "description": "Inventory management — track products, categories, warehouses, and stock levels",
+  "icon": "package",
+  "tables": [
+    {
+      "name": "categories",
+      "display_field": "category_name",
+      "columns": [
+        {"name": "category_name", "type": "text", "nullable": false},
+        {"name": "description", "type": "text"}
+      ]
+    },
+    {
+      "name": "warehouses",
+      "display_field": "warehouse_name",
+      "columns": [
+        {"name": "warehouse_name", "type": "text", "nullable": false},
+        {"name": "location", "type": "text"},
+        {"name": "capacity", "type": "integer"}
+      ]
+    },
+    {
+      "name": "products",
+      "display_field": "product_name",
+      "columns": [
+        {"name": "product_name", "type": "text", "nullable": false},
+        {"name": "sku", "type": "text", "unique": true, "nullable": false},
+        {"name": "description", "type": "text"},
+        {"name": "price", "type": "decimal", "nullable": false},
+        {"name": "cost", "type": "decimal"},
+        {"name": "category_id", "type": "reference", "reference_table": "categories"},
+        {"name": "is_active", "type": "boolean", "default": "true"}
+      ]
+    },
+    {
+      "name": "stock_levels",
+      "display_field": null,
+      "columns": [
+        {"name": "quantity", "type": "integer", "nullable": false},
+        {"name": "min_quantity", "type": "integer"},
+        {"name": "product_id", "type": "reference", "reference_table": "products"},
+        {"name": "warehouse_id", "type": "reference", "reference_table": "warehouses"}
+      ]
+    }
+  ]
+}

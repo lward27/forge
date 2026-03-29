@@ -10,7 +10,7 @@ from forge_platform.schemas.table import ColumnCreate, TableCreate, TableAlter
 from forge_platform.schemas.database import DatabaseCreate
 from forge_platform.services import (
     database_service, table_service, row_service,
-    view_form_service, dashboard_service,
+    view_form_service, dashboard_service, template_service,
 )
 
 
@@ -242,6 +242,20 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "deploy_template",
+            "description": "Deploy a pre-built app template that creates multiple tables with relationships. Available templates: crm, inventory, project_tracker, helpdesk",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "template_id": {"type": "string", "enum": ["crm", "inventory", "project_tracker", "helpdesk"]},
+                },
+                "required": ["template_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "navigate",
             "description": "Navigate the user to a specific page in the portal",
             "parameters": {
@@ -290,6 +304,8 @@ def execute_tool(
             return _create_view(session, tenant_db, args)
         elif tool_name == "create_dashboard":
             return _create_dashboard(session, tenant_db, args)
+        elif tool_name == "deploy_template":
+            return _deploy_template(session, tenant_db, args)
         elif tool_name == "navigate":
             return {"action": "navigate", "path": args["path"]}
         else:
@@ -422,6 +438,11 @@ def _drop_table(session, tenant_db, args):
     if result is None:
         return {"error": f"Table '{args['table_name']}' not found"}
     return {"success": True, "table": args["table_name"], "status": "deleted"}
+
+
+def _deploy_template(session, tenant_db, args):
+    result = template_service.deploy_template(session, tenant_db, args["template_id"])
+    return result
 
 
 def _create_view(session, tenant_db, args):

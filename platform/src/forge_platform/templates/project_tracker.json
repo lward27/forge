@@ -1,0 +1,53 @@
+{
+  "name": "Project Tracker",
+  "description": "Project management — track projects, tasks, team members, and time entries",
+  "icon": "kanban",
+  "tables": [
+    {
+      "name": "team_members",
+      "display_field": "full_name",
+      "columns": [
+        {"name": "full_name", "type": "text", "nullable": false},
+        {"name": "email", "type": "text", "unique": true},
+        {"name": "role", "type": "text"},
+        {"name": "is_active", "type": "boolean", "default": "true"}
+      ]
+    },
+    {
+      "name": "projects",
+      "display_field": "project_name",
+      "columns": [
+        {"name": "project_name", "type": "text", "nullable": false},
+        {"name": "description", "type": "text"},
+        {"name": "status", "type": "text", "nullable": false},
+        {"name": "start_date", "type": "date"},
+        {"name": "end_date", "type": "date"},
+        {"name": "owner_id", "type": "reference", "reference_table": "team_members"}
+      ]
+    },
+    {
+      "name": "tasks",
+      "display_field": "task_name",
+      "columns": [
+        {"name": "task_name", "type": "text", "nullable": false},
+        {"name": "description", "type": "text"},
+        {"name": "status", "type": "text", "nullable": false},
+        {"name": "priority", "type": "text"},
+        {"name": "due_date", "type": "date"},
+        {"name": "project_id", "type": "reference", "reference_table": "projects"},
+        {"name": "assignee_id", "type": "reference", "reference_table": "team_members"}
+      ]
+    },
+    {
+      "name": "time_entries",
+      "display_field": null,
+      "columns": [
+        {"name": "hours", "type": "decimal", "nullable": false},
+        {"name": "description", "type": "text"},
+        {"name": "entry_date", "type": "date", "nullable": false},
+        {"name": "task_id", "type": "reference", "reference_table": "tasks"},
+        {"name": "team_member_id", "type": "reference", "reference_table": "team_members"}
+      ]
+    }
+  ]
+}

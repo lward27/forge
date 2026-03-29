@@ -1,0 +1,55 @@
+{
+  "name": "CRM",
+  "description": "Customer relationship management — track companies, contacts, deals, and activities",
+  "icon": "users",
+  "tables": [
+    {
+      "name": "companies",
+      "display_field": "company_name",
+      "columns": [
+        {"name": "company_name", "type": "text", "nullable": false},
+        {"name": "industry", "type": "text"},
+        {"name": "website", "type": "text"},
+        {"name": "phone", "type": "text"},
+        {"name": "annual_revenue", "type": "decimal"},
+        {"name": "is_active", "type": "boolean", "default": "true"}
+      ]
+    },
+    {
+      "name": "contacts",
+      "display_field": "full_name",
+      "columns": [
+        {"name": "full_name", "type": "text", "nullable": false},
+        {"name": "email", "type": "text", "unique": true},
+        {"name": "phone", "type": "text"},
+        {"name": "job_title", "type": "text"},
+        {"name": "company_id", "type": "reference", "reference_table": "companies"}
+      ]
+    },
+    {
+      "name": "deals",
+      "display_field": "deal_name",
+      "columns": [
+        {"name": "deal_name", "type": "text", "nullable": false},
+        {"name": "amount", "type": "decimal"},
+        {"name": "stage", "type": "text", "nullable": false},
+        {"name": "close_date", "type": "date"},
+        {"name": "company_id", "type": "reference", "reference_table": "companies"},
+        {"name": "contact_id", "type": "reference", "reference_table": "contacts"}
+      ]
+    },
+    {
+      "name": "activities",
+      "display_field": "subject",
+      "columns": [
+        {"name": "subject", "type": "text", "nullable": false},
+        {"name": "activity_type", "type": "text", "nullable": false},
+        {"name": "notes", "type": "text"},
+        {"name": "activity_date", "type": "timestamp"},
+        {"name": "company_id", "type": "reference", "reference_table": "companies"},
+        {"name": "contact_id", "type": "reference", "reference_table": "contacts"},
+        {"name": "deal_id", "type": "reference", "reference_table": "deals"}
+      ]
+    }
+  ]
+}
