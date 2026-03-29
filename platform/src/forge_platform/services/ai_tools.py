@@ -166,6 +166,35 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "delete_rows",
+            "description": "Delete rows from a table by their IDs",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "table_name": {"type": "string"},
+                    "ids": {"type": "array", "items": {"type": "integer"}, "description": "List of row IDs to delete"},
+                },
+                "required": ["table_name", "ids"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "drop_table",
+            "description": "Delete a table and all its data permanently. Use with caution.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "table_name": {"type": "string"},
+                },
+                "required": ["table_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "create_view",
             "description": "Create a named view for a table with specific columns, sort, and filters",
             "parameters": {
@@ -253,6 +282,10 @@ def execute_tool(
             return _count_rows(session, tenant_db, args)
         elif tool_name == "update_row":
             return _update_row(session, tenant_db, args)
+        elif tool_name == "delete_rows":
+            return _delete_rows(session, tenant_db, args)
+        elif tool_name == "drop_table":
+            return _drop_table(session, tenant_db, args)
         elif tool_name == "create_view":
             return _create_view(session, tenant_db, args)
         elif tool_name == "create_dashboard":
@@ -375,6 +408,20 @@ def _update_row(session, tenant_db, args):
     if result is None:
         return {"error": f"Row {args['row_id']} not found in '{args['table_name']}'"}
     return {"success": True, "row": result}
+
+
+def _delete_rows(session, tenant_db, args):
+    deleted = row_service.bulk_delete_rows(
+        session, tenant_db, args["table_name"], args["ids"]
+    )
+    return {"success": True, "deleted": deleted}
+
+
+def _drop_table(session, tenant_db, args):
+    result = table_service.delete_table(session, tenant_db, args["table_name"])
+    if result is None:
+        return {"error": f"Table '{args['table_name']}' not found"}
+    return {"success": True, "table": args["table_name"], "status": "deleted"}
 
 
 def _create_view(session, tenant_db, args):
