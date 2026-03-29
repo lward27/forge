@@ -37,6 +37,7 @@ def _mock_table_def():
     td = MagicMock()
     td.name = "customers"
     td.display_field = "name"
+    td.app_name = None
     td.database_id = DB_ID
     td.status = "active"
     td.created_at = "2026-03-25T12:00:00"

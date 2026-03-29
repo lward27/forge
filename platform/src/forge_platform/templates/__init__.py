@@ -17,6 +17,9 @@ def list_templates() -> list[dict]:
                 "description": data["description"],
                 "icon": data.get("icon", "table"),
                 "table_count": len(data.get("tables", [])),
+                "view_count": len(data.get("views", [])),
+                "form_count": len(data.get("forms", [])),
+                "has_dashboard": "dashboard" in data,
             })
     return templates
 

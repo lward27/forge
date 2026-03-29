@@ -51,5 +51,64 @@
         {"name": "deal_id", "type": "reference", "reference_table": "deals"}
       ]
     }
-  ]
+  ],
+  "views": [
+    {
+      "table": "companies",
+      "name": "Active Companies",
+      "config": {
+        "columns": [
+          {"field": "id", "visible": false, "width": null},
+          {"field": "company_name", "visible": true, "width": null},
+          {"field": "industry", "visible": true, "width": null},
+          {"field": "annual_revenue", "visible": true, "width": null},
+          {"field": "is_active", "visible": false, "width": null}
+        ],
+        "default_sort": {"field": "company_name", "direction": "asc"},
+        "page_size": 25
+      }
+    },
+    {
+      "table": "deals",
+      "name": "Open Deals",
+      "config": {
+        "columns": [
+          {"field": "id", "visible": false, "width": null},
+          {"field": "deal_name", "visible": true, "width": null},
+          {"field": "amount", "visible": true, "width": null},
+          {"field": "stage", "visible": true, "width": null},
+          {"field": "close_date", "visible": true, "width": null},
+          {"field": "company_id", "visible": true, "width": null}
+        ],
+        "default_sort": {"field": "close_date", "direction": "asc"},
+        "page_size": 25
+      }
+    }
+  ],
+  "forms": [
+    {
+      "table": "companies",
+      "name": "Quick Add",
+      "config": {
+        "sections": [{"title": "Essentials", "fields": [
+          {"field": "company_name", "visible": true},
+          {"field": "industry", "visible": true},
+          {"field": "phone", "visible": true}
+        ]}],
+        "related_tables": []
+      }
+    }
+  ],
+  "dashboard": {
+    "name": "CRM Dashboard",
+    "widgets": [
+      {"type": "stat", "title": "Companies", "table": "companies", "w": 3, "h": 2},
+      {"type": "stat", "title": "Contacts", "table": "contacts", "w": 3, "h": 2},
+      {"type": "stat", "title": "Deals", "table": "deals", "w": 3, "h": 2},
+      {"type": "stat", "title": "Activities", "table": "activities", "w": 3, "h": 2},
+      {"type": "view", "title": "Active Companies", "table": "companies", "view_name": "Active Companies", "w": 6, "h": 4},
+      {"type": "view", "title": "Open Deals", "table": "deals", "view_name": "Open Deals", "w": 6, "h": 4},
+      {"type": "form", "title": "Log Activity", "table": "activities", "w": 12, "h": 4}
+    ]
+  }
 }

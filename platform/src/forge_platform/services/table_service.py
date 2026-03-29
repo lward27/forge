@@ -49,6 +49,7 @@ def create_table(
         database_id=tenant_db.id,
         name=table_in.name,
         display_field=display_field,
+        app_name=table_in.app_name,
     )
     session.add(table_def)
     session.flush()
@@ -222,6 +223,10 @@ def alter_table(
     # Update display_field if specified
     if alter_in.display_field is not None:
         table_def.display_field = alter_in.display_field
+
+    # Update app_name if specified
+    if alter_in.app_name is not None:
+        table_def.app_name = alter_in.app_name
 
     table_def.updated_at = datetime.now(timezone.utc)
     session.add(table_def)

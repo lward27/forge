@@ -47,5 +47,36 @@
         {"name": "agent_id", "type": "reference", "reference_table": "agents"}
       ]
     }
-  ]
+  ],
+  "views": [
+    {
+      "table": "tickets",
+      "name": "Open Tickets",
+      "config": {
+        "columns": [
+          {"field": "id", "visible": true, "width": null},
+          {"field": "subject", "visible": true, "width": null},
+          {"field": "priority", "visible": true, "width": null},
+          {"field": "status", "visible": true, "width": null},
+          {"field": "customer_id", "visible": true, "width": null},
+          {"field": "agent_id", "visible": true, "width": null}
+        ],
+        "default_sort": {"field": "created_date", "direction": "desc"},
+        "page_size": 25
+      }
+    }
+  ],
+  "forms": [],
+  "dashboard": {
+    "name": "Helpdesk Dashboard",
+    "widgets": [
+      {"type": "stat", "title": "Tickets", "table": "tickets", "w": 3, "h": 2},
+      {"type": "stat", "title": "Customers", "table": "customers", "w": 3, "h": 2},
+      {"type": "stat", "title": "Agents", "table": "agents", "w": 3, "h": 2},
+      {"type": "stat", "title": "Comments", "table": "comments", "w": 3, "h": 2},
+      {"type": "view", "title": "Open Tickets", "table": "tickets", "view_name": "Open Tickets", "w": 12, "h": 4},
+      {"type": "form", "title": "New Ticket", "table": "tickets", "w": 6, "h": 4},
+      {"type": "form", "title": "Add Comment", "table": "comments", "w": 6, "h": 4}
+    ]
+  }
 }

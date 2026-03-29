@@ -43,5 +43,34 @@
         {"name": "warehouse_id", "type": "reference", "reference_table": "warehouses"}
       ]
     }
-  ]
+  ],
+  "views": [
+    {
+      "table": "products",
+      "name": "Active Products",
+      "config": {
+        "columns": [
+          {"field": "id", "visible": false, "width": null},
+          {"field": "product_name", "visible": true, "width": null},
+          {"field": "sku", "visible": true, "width": null},
+          {"field": "price", "visible": true, "width": null},
+          {"field": "category_id", "visible": true, "width": null}
+        ],
+        "default_sort": {"field": "product_name", "direction": "asc"},
+        "page_size": 25
+      }
+    }
+  ],
+  "forms": [],
+  "dashboard": {
+    "name": "Inventory Dashboard",
+    "widgets": [
+      {"type": "stat", "title": "Products", "table": "products", "w": 4, "h": 2},
+      {"type": "stat", "title": "Categories", "table": "categories", "w": 4, "h": 2},
+      {"type": "stat", "title": "Warehouses", "table": "warehouses", "w": 4, "h": 2},
+      {"type": "view", "title": "Active Products", "table": "products", "view_name": "Active Products", "w": 12, "h": 4},
+      {"type": "form", "title": "Add Product", "table": "products", "w": 6, "h": 4},
+      {"type": "form", "title": "Update Stock", "table": "stock_levels", "w": 6, "h": 4}
+    ]
+  }
 }

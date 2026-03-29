@@ -36,6 +36,7 @@ def _table_response(table_def, columns, database_id) -> TableResponse:
     return TableResponse(
         name=table_def.name,
         display_field=table_def.display_field,
+        app_name=table_def.app_name,
         database_id=database_id,
         columns=[
             ColumnResponse(
@@ -51,6 +52,27 @@ def _table_response(table_def, columns, database_id) -> TableResponse:
         ],
         created_at=table_def.created_at,
     )
+
+
+@router.get("/apps")
+def list_apps(
+    tenant_id: uuid.UUID,
+    db_id: uuid.UUID,
+    session: Session = Depends(get_session),
+):
+    _, tenant_db = _get_tenant_and_db(session, tenant_id, db_id)
+    tables = table_service.list_tables(session, tenant_db.id)
+    apps: dict[str, int] = {}
+    ungrouped = 0
+    for t, _ in tables:
+        if t.app_name:
+            apps[t.app_name] = apps.get(t.app_name, 0) + 1
+        else:
+            ungrouped += 1
+    return {
+        "apps": [{"name": name, "table_count": count} for name, count in sorted(apps.items())],
+        "ungrouped_count": ungrouped,
+    }
 
 
 @router.post("", response_model=TableResponse, status_code=201)

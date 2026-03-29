@@ -24,22 +24,30 @@ def build_context(
     if not tables:
         lines.append("  (no tables yet)")
     else:
+        # Group by app
+        apps: dict[str, list] = {}
         for t, cols in tables:
-            col_desc = []
-            for c in cols:
-                desc = f"{c.name} ({c.column_type})"
-                if c.reference_table:
-                    desc += f" → {c.reference_table}"
-                if c.primary_key:
-                    desc += " [PK]"
-                if not c.nullable and not c.primary_key:
-                    desc += " [required]"
-                if c.unique:
-                    desc += " [unique]"
-                col_desc.append(desc)
+            app = t.app_name or "Ungrouped"
+            apps.setdefault(app, []).append((t, cols))
 
-            display = f" (display: {t.display_field})" if t.display_field else ""
-            lines.append(f"  - {t.name}{display}: {', '.join(col_desc)}")
+        for app_name, app_tables in apps.items():
+            lines.append(f"  [{app_name}]")
+            for t, cols in app_tables:
+                col_desc = []
+                for c in cols:
+                    desc = f"{c.name} ({c.column_type})"
+                    if c.reference_table:
+                        desc += f" → {c.reference_table}"
+                    if c.primary_key:
+                        desc += " [PK]"
+                    if not c.nullable and not c.primary_key:
+                        desc += " [required]"
+                    if c.unique:
+                        desc += " [unique]"
+                    col_desc.append(desc)
+
+                display = f" (display: {t.display_field})" if t.display_field else ""
+                lines.append(f"    - {t.name}{display}: {', '.join(col_desc)}")
 
     # Views
     lines.append("")
