@@ -20,7 +20,7 @@
 
 ### Chat Panel — UX Improvements
 - Conversation history: load previous conversations from sidebar
-- Conversation titles: auto-generate from first message
+- Conversation titles: auto-generate via LLM (short call after first exchange: "Generate a 3-5 word title"). Falls back to first message truncation if no LLM configured. Uses tenant's configured model — cost is ~$0.001 per title.
 - Streaming responses (SSE): show AI output token-by-token as it generates
 - Error recovery: retry failed messages
 - Context awareness: AI knows which table/record the user is currently viewing

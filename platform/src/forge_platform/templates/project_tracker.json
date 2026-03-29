@@ -9,7 +9,7 @@
       "columns": [
         {"name": "full_name", "type": "text", "nullable": false},
         {"name": "email", "type": "text", "unique": true},
-        {"name": "role", "type": "text"},
+        {"name": "team_role", "type": "text"},
         {"name": "is_active", "type": "boolean", "default": "true"}
       ]
     },
