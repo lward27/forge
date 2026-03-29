@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from forge_platform.database import get_session
 from forge_platform.models.llm_provider import LLMProvider
+from forge_platform.models.tenant import Tenant
 from forge_platform.models.tenant_llm_config import TenantLLMConfig
 from forge_platform.models.ai_usage import AIUsage
 
@@ -116,6 +117,15 @@ def get_usage(
     if tenant_id:
         stmt = stmt.where(AIUsage.tenant_id == tenant_id)
     records = list(session.exec(stmt.order_by(AIUsage.created_at.desc()).limit(100)).all())  # type: ignore
+
+    # Build tenant name lookup
+    tenant_ids = {r.tenant_id for r in records}
+    tenant_map: dict[str, str] = {}
+    for tid in tenant_ids:
+        t = session.get(Tenant, tid)
+        if t:
+            tenant_map[str(tid)] = t.display_name or t.name
+
     total_cost = sum(r.cost_input + r.cost_output for r in records)
     total_input = sum(r.input_tokens for r in records)
     total_output = sum(r.output_tokens for r in records)
@@ -127,6 +137,7 @@ def get_usage(
             {
                 "id": str(r.id),
                 "tenant_id": str(r.tenant_id),
+                "tenant_name": tenant_map.get(str(r.tenant_id), "Unknown"),
                 "input_tokens": r.input_tokens,
                 "output_tokens": r.output_tokens,
                 "cost": round(r.cost_input + r.cost_output, 6),
