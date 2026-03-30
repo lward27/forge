@@ -84,8 +84,12 @@ def chat(
     for m in conversation.messages:
         llm_messages.append(m)
 
-    # Add new user message
-    llm_messages.append({"role": "user", "content": message})
+    # Add new user message with optional page context
+    page_context = body.get("page_context")
+    user_content = message
+    if page_context:
+        user_content = f"[User is currently viewing: {page_context}]\n\n{message}"
+    llm_messages.append({"role": "user", "content": user_content})
 
     # Track actions taken
     actions_taken = []
@@ -145,6 +149,22 @@ def chat(
         {"role": "assistant", "content": final_content or "", "actions": actions_taken},
     ]
     conversation.updated_at = datetime.now(timezone.utc)
+
+    # Generate title on first exchange (2 messages = first user + first assistant)
+    if len(conversation.messages) == 2 and not conversation.title:
+        try:
+            title_result = llm_service.chat_completion(provider, [
+                {"role": "system", "content": "Generate a concise 3-6 word title for this conversation. Return ONLY the title, nothing else."},
+                {"role": "user", "content": message},
+            ])
+            title = (title_result.get("content") or "").strip().strip('"').strip("'")
+            if title:
+                conversation.title = title[:100]
+                total_input += title_result.get("input_tokens", 0)
+                total_output += title_result.get("output_tokens", 0)
+        except Exception:
+            conversation.title = message[:50]
+
     session.add(conversation)
 
     # Track usage
@@ -186,6 +206,7 @@ def list_conversations(
         "conversations": [
             {
                 "id": str(c.id),
+                "title": c.title,
                 "message_count": len(c.messages),
                 "created_at": c.created_at.isoformat(),
                 "updated_at": c.updated_at.isoformat() if c.updated_at else None,
@@ -202,6 +223,7 @@ def get_conversation(conversation_id: uuid.UUID, session: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Conversation not found")
     return {
         "id": str(c.id),
+        "title": c.title,
         "messages": c.messages,
         "created_at": c.created_at.isoformat(),
         "updated_at": c.updated_at.isoformat() if c.updated_at else None,

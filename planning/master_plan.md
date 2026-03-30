@@ -270,22 +270,23 @@ Auto-generated default view and form per table, configurable through the portal.
 Phase 1 (COMPLETE)
   Wave 1.1 (Bootstrap) → 1.2 (Tenants) → 1.3 (DB) → 1.4 (Schema) → 1.5 (CRUD)
 
-Phase 2 (Current)
-  Wave 2.1 (API Key Auth)
-    ├→ Wave 2.2 (Admin Panel)
-    └→ Wave 2.3 (Tenant Portal)
-         └→ Wave 2.4 (Table Relationships)
-              └→ Wave 2.5 (Portal Polish)
-                   └→ Wave 2.6 (Display Fields & Detail Page)
-                        └→ Wave 2.7 (Views & Forms)
-                             └→ Future: Wave 2.8 (Multiple Named Views/Forms)
+Phase 2 (COMPLETE)
+  Wave 2.1 (API Key Auth) → 2.2 (Admin Panel) → 2.3 (Tenant Portal)
+    → 2.4 (Relationships) → 2.5 (Polish) → 2.6 (Display Fields & Detail Page)
+    → 2.7 (Views & Forms) → 2.8 (Named Views/Forms) → 2.9 (Dashboards)
+    → 2.10 (Apps + Enhanced Templates)
 
-Phase 3
-  Wave 2.7 (Views & Forms)
-    └→ Wave 3.1 (AI Chat) → 3.2 (Refinement) → 3.3 (Templates)
+Phase 3 (COMPLETE)
+  Wave 3.1 (AI Chat Orchestrator) → 3.2 (AI Polish + Admin LLM UI)
+    → 3.3 (Templates Gallery + Chat Page + Dark Mode + Conversation Titles)
 
-Phase 4
-  └→ Production hardening waves (independent, can be done in any order)
+Phase 4 (NEXT)
+  └→ 4.1 User Accounts & RBAC
+  └→ 4.2 Observability
+  └→ 4.3 Custom Business Logic
+  └→ 4.4 Webhooks & Integrations
+  └→ 4.5 Scheduled Jobs
+  └→ 4.6 Multi-Cluster / Scaling
 ```
 
 ---
