@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
-MAX_TOOL_ROUNDS = 3  # keep responses fast to avoid connection timeouts
+MAX_TOOL_ROUNDS = 5  # allow enough rounds for template deploy + populate
 
 
 @router.post("/chat")
@@ -139,11 +139,10 @@ def chat(
                 "content": json.dumps(tool_result, cls=SafeEncoder),
             })
 
-    # Save conversation
-    # Store user message + assistant response (simplified)
+    # Save conversation with actions metadata
     conversation.messages = conversation.messages + [
         {"role": "user", "content": message},
-        {"role": "assistant", "content": final_content or ""},
+        {"role": "assistant", "content": final_content or "", "actions": actions_taken},
     ]
     conversation.updated_at = datetime.now(timezone.utc)
     session.add(conversation)
