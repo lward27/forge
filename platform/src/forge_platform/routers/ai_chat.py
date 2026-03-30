@@ -99,6 +99,7 @@ def chat(
     final_content = None
 
     # Tool execution loop
+    hit_tool_limit = False
     for _round in range(MAX_TOOL_ROUNDS):
         try:
             result = llm_service.chat_completion(provider, llm_messages, ai_tools.TOOLS)
@@ -118,6 +119,9 @@ def chat(
         if not tool_calls:
             # No more tool calls — done
             break
+    else:
+        # Loop completed without break — hit the tool round limit
+        hit_tool_limit = True
 
         # Add assistant message with tool calls
         assistant_msg = {"role": "assistant", "content": content}
@@ -189,6 +193,7 @@ def chat(
         "conversation_id": str(conversation.id),
         "response": final_content or "",
         "actions_taken": actions_taken,
+        "hit_tool_limit": hit_tool_limit,
         "usage": {
             "input_tokens": total_input,
             "output_tokens": total_output,
