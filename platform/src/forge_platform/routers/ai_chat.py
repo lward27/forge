@@ -80,9 +80,10 @@ def chat(
     # Build messages for LLM
     llm_messages = [{"role": "system", "content": context}]
 
-    # Add conversation history
+    # Add conversation history (strip non-standard fields like 'actions')
     for m in conversation.messages:
-        llm_messages.append(m)
+        clean = {"role": m["role"], "content": m.get("content", "")}
+        llm_messages.append(clean)
 
     # Add new user message with optional page context
     page_context = body.get("page_context")
@@ -99,7 +100,12 @@ def chat(
 
     # Tool execution loop
     for _round in range(MAX_TOOL_ROUNDS):
-        result = llm_service.chat_completion(provider, llm_messages, ai_tools.TOOLS)
+        try:
+            result = llm_service.chat_completion(provider, llm_messages, ai_tools.TOOLS)
+        except Exception as e:
+            logger.error("LLM call failed: %s", e)
+            final_content = f"Sorry, the AI service returned an error. Please try again."
+            break
         total_input += result.get("input_tokens", 0)
         total_output += result.get("output_tokens", 0)
 

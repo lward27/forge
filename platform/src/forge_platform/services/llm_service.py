@@ -51,7 +51,9 @@ def _openai_request(
 
     with httpx.Client(timeout=120.0) as client:
         resp = client.post(url, json=body, headers=headers)
-        resp.raise_for_status()
+        if not resp.is_success:
+            logger.error("LLM error %s: %s", resp.status_code, resp.text[:500])
+            resp.raise_for_status()
         data = resp.json()
 
     choice = data["choices"][0]
