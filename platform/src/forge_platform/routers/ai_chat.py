@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
-MAX_TOOL_ROUNDS = 5  # allow enough rounds for template deploy + populate
+from forge_platform.config import settings
 
 
 @router.post("/chat")
@@ -98,14 +98,14 @@ def chat(
     total_output = 0
     final_content = None
 
-    # Tool execution loop
-    hit_tool_limit = False
-    for _round in range(MAX_TOOL_ROUNDS):
+    # Tool execution loop — configurable via AI_MAX_TOOL_ROUNDS env var (default 50)
+    max_rounds = settings.ai_max_tool_rounds or 999
+    for _round in range(max_rounds):
         try:
             result = llm_service.chat_completion(provider, llm_messages, ai_tools.TOOLS)
         except Exception as e:
             logger.error("LLM call failed: %s", e)
-            final_content = f"Sorry, the AI service returned an error. Please try again."
+            final_content = "Sorry, the AI service returned an error. Please try again."
             break
         total_input += result.get("input_tokens", 0)
         total_output += result.get("output_tokens", 0)
@@ -117,11 +117,7 @@ def chat(
             final_content = content
 
         if not tool_calls:
-            # No more tool calls — done
             break
-    else:
-        # Loop completed without break — hit the tool round limit
-        hit_tool_limit = True
 
         # Add assistant message with tool calls
         assistant_msg = {"role": "assistant", "content": content}
@@ -193,7 +189,6 @@ def chat(
         "conversation_id": str(conversation.id),
         "response": final_content or "",
         "actions_taken": actions_taken,
-        "hit_tool_limit": hit_tool_limit,
         "usage": {
             "input_tokens": total_input,
             "output_tokens": total_output,
