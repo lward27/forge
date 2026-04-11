@@ -25,13 +25,13 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.forgePostgresql.name }}-credentials
-              key: POSTGRES_PASSWORD
+              name: {{ .Values.forgePostgresql.auth.existingSecret }}
+              key: {{ .Values.forgePostgresql.auth.passwordKey }}
         - name: POSTGRES_DB
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.forgePostgresql.name }}-credentials
-              key: POSTGRES_DB
+              name: {{ .Values.forgePostgresql.auth.existingSecret }}
+              key: {{ .Values.forgePostgresql.auth.databaseKey }}
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         volumeMounts:

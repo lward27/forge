@@ -22,6 +22,11 @@ spec:
         ports:
         - containerPort: {{ .Values.forgePlatform.service.targetPort }}
         env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.forgePlatform.databaseUrlSecret.name }}
+              key: {{ .Values.forgePlatform.databaseUrlSecret.key }}
         {{- range $key, $value := .Values.forgePlatform.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}

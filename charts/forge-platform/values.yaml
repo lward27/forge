@@ -22,7 +22,6 @@ forgePlatform:
       nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 
   env:
-    DATABASE_URL: "postgresql://postgres:forge-secret-password@forge-postgresql.forge-platform.svc.cluster.local:5432/forge_platform"
     OTEL_SERVICE_NAME: "forge-platform"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring.svc.cluster.local:4317"
     OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
@@ -31,6 +30,10 @@ forgePlatform:
     OTEL_TRACES_EXPORTER: "otlp"
     OTEL_PYTHON_LOG_CORRELATION: "true"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=production,service.namespace=forge-platform"
+
+  databaseUrlSecret:
+    name: "forge-platform-env"
+    key: "DATABASE_URL"
 
   resources:
     requests:

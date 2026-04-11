@@ -64,7 +64,7 @@ forgePostgresql:
     pullPolicy: IfNotPresent
 
   auth:
-    postgresPassword: "forge-secret-password"
+    existingSecret: "forge-postgresql-credentials"
     database: "forge_platform"
 
   service:
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://postgres:forge-secret-password@forge-postgresql.forge-platform.svc.cluster.local:5432/forge_platform"
+    database_url: str = "postgresql://postgres@localhost:5432/forge_platform"
     app_name: str = "forge-platform"
 
 settings = Settings()
@@ -381,7 +381,7 @@ forgePlatform:
       cert-manager.io/cluster-issuer: letsencrypt-prod
 
   env:
-    DATABASE_URL: "postgresql://postgres:forge-secret-password@forge-postgresql.forge-platform.svc.cluster.local:5432/forge_platform"
+    DATABASE_URL secret sourced from `forge-platform-env`
     OTEL_SERVICE_NAME: "forge-platform"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://opentelemetry-collector.monitoring.svc.cluster.local:4317"
     OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"

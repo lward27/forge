@@ -7,8 +7,12 @@ forgePostgresql:
     pullPolicy: IfNotPresent
 
   auth:
-    postgresPassword: "forge-secret-password"
     database: "forge_platform"
+    existingSecret: "forge-postgresql-credentials"
+    passwordKey: "POSTGRES_PASSWORD"
+    databaseKey: "POSTGRES_DB"
+    userKey: "POSTGRES_USER"
+    databaseUrlKey: "DATABASE_URL"
 
   service:
     type: ClusterIP
