@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: {{ .Values.forgePostgresql.name }}
 spec:
   serviceName: {{ .Values.forgePostgresql.name }}
-  replicas: 1
+  replicas: {{ .Values.forgePostgresql.replicaCount }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Values.forgePostgresql.name }}

@@ -1,3 +1,11 @@
+{{- $pg := .Values.forgePostgresql -}}
+{{- $primarySelector := $pg.service.primarySelector | default $pg.name -}}
+{{- if and $pg.migrationTarget.enabled (eq $pg.migrationTarget.name $pg.name) -}}
+{{- fail "forgePostgresql.migrationTarget.name must differ from forgePostgresql.name" -}}
+{{- end -}}
+{{- if and (ne $primarySelector $pg.name) (or (not $pg.migrationTarget.enabled) (ne $primarySelector $pg.migrationTarget.name)) -}}
+{{- fail "forgePostgresql.service.primarySelector must select the primary or an enabled migration target" -}}
+{{- end -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,7 +15,7 @@ metadata:
 spec:
   type: {{ .Values.forgePostgresql.service.type }}
   selector:
-    app.kubernetes.io/name: {{ .Values.forgePostgresql.name }}
+    app.kubernetes.io/name: {{ $primarySelector }}
   ports:
   - port: {{ .Values.forgePostgresql.service.port }}
     targetPort: 5432
