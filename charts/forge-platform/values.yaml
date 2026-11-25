@@ -1,6 +1,6 @@
 forgePlatform:
   name: forge-platform
-  replicaCount: 0
+  replicaCount: 1
 
   image:
     repository: registry.lucas.engineering/forge_platform
