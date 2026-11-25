@@ -1,6 +1,6 @@
 forgePostgresql:
   name: forge-postgresql
-  replicaCount: 1
+  replicaCount: 0
 
   image:
     repository: postgres
@@ -18,7 +18,7 @@ forgePostgresql:
   service:
     type: ClusterIP
     port: 5432
-    primarySelector: forge-postgresql
+    primarySelector: forge-postgresql-next
 
   persistence:
     size: 8Gi
