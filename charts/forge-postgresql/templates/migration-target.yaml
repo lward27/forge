@@ -1,0 +1,114 @@
+{{- if .Values.forgePostgresql.migrationTarget.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.forgePostgresql.migrationTarget.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.forgePostgresql.migrationTarget.name }}
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: {{ .Values.forgePostgresql.migrationTarget.name }}
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.forgePostgresql.migrationTarget.name }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.forgePostgresql.migrationTarget.name }}
+spec:
+  serviceName: {{ .Values.forgePostgresql.migrationTarget.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.forgePostgresql.migrationTarget.name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.forgePostgresql.migrationTarget.name }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: postgresql
+        image: "{{ .Values.forgePostgresql.migrationTarget.image.repository }}:{{ .Values.forgePostgresql.migrationTarget.image.tag }}"
+        imagePullPolicy: {{ .Values.forgePostgresql.migrationTarget.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.forgePostgresql.auth.existingSecret }}
+              key: {{ .Values.forgePostgresql.auth.passwordKey }}
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.forgePostgresql.auth.existingSecret }}
+              key: {{ .Values.forgePostgresql.auth.databaseKey }}
+        - name: PGDATA
+          value: {{ .Values.forgePostgresql.migrationTarget.dataDirectory | quote }}
+        volumeMounts:
+        - name: pgdata
+          mountPath: /var/lib/postgresql
+        resources:
+          {{- toYaml .Values.forgePostgresql.resources | nindent 10 }}
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres"]
+          initialDelaySeconds: 15
+          periodSeconds: 30
+  volumeClaimTemplates:
+  - metadata:
+      name: pgdata
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: {{ .Values.forgePostgresql.migrationTarget.persistence.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.forgePostgresql.migrationTarget.persistence.size }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.forgePostgresql.migrationTarget.name }}-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.forgePostgresql.migrationTarget.name }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: forge-platform
+    - podSelector:
+        matchLabels:
+          maintenance.lucas.engineering/postgresql-client: {{ .Values.forgePostgresql.migrationTarget.name | quote }}
+    ports:
+    - protocol: TCP
+      port: 5432
+{{- end }}

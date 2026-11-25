@@ -1,5 +1,6 @@
 forgePostgresql:
   name: forge-postgresql
+  replicaCount: 1
 
   image:
     repository: postgres
@@ -17,6 +18,7 @@ forgePostgresql:
   service:
     type: ClusterIP
     port: 5432
+    primarySelector: forge-postgresql
 
   persistence:
     size: 8Gi
@@ -29,3 +31,17 @@ forgePostgresql:
     limits:
       cpu: "1000m"
       memory: "512Mi"
+
+  # Optional side-by-side target for a PostgreSQL major-version migration.
+  # Keep disabled until a restored copy has been validated and the cutover is planned.
+  migrationTarget:
+    enabled: false
+    name: forge-postgresql-next
+    image:
+      repository: docker.io/library/postgres
+      tag: "18.7@sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3"
+      pullPolicy: IfNotPresent
+    dataDirectory: /var/lib/postgresql/18/docker
+    persistence:
+      size: 8Gi
+      storageClass: local-path
