@@ -35,7 +35,7 @@ forgePostgresql:
   # Optional side-by-side target for a PostgreSQL major-version migration.
   # Keep disabled until a restored copy has been validated and the cutover is planned.
   migrationTarget:
-    enabled: false
+    enabled: true
     name: forge-postgresql-next
     image:
       repository: docker.io/library/postgres
